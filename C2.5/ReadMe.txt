@@ -22,3 +22,16 @@ Notes:
 3. arm926ej-s and arm926 are compatible.
 4. When run qemu, if specify the telnet ip as "127.0.0.1", then with Putty or Tera Term, both "localhost" and "127.0.0.1" can work.
    If specify the telnet ip as "localhost", then with Putty or Tera Term, only "127.0.0.1" can work, even I put "127.0.0.1 localhost" in hosts file.
+
+Running Result:
+
+Enter lines from serial terminal 0
+abcde
+[You have input:] abcde
+12345
+[You have input:] 12345
+end
+[You have input:] end
+Compute sum of array:
+sum = 55
+END OF RUN
