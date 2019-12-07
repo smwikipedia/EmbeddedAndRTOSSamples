@@ -1,0 +1,1 @@
+qemu-system-arm -M versatilepb -cpu arm926 -kernel build/t.bin -nographic -serial telnet:localhost:1234,server
