@@ -20,7 +20,7 @@ Notes:
    arm-none-eabi-as -mcpu=arm926ej-s  t.S -o t.o
 
 3. arm926ej-s and arm926 are compatible.
-4. When run qemu, if specify the telnet ip as "127.0.0.1", then with Putty or Tera Term, both "localhost" and "127.0.0.1" can work.
+4. When run qemu in step 2, if specify the telnet ip as "127.0.0.1", then with Putty or Tera Term, both "localhost" and "127.0.0.1" can work.
    If specify the telnet ip as "localhost", then with Putty or Tera Term, only "127.0.0.1" can work, even I put "127.0.0.1 localhost" in hosts file.
 
 Running Result:
