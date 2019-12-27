@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "uart.h": "c",
+        "versatilepb_pl190_vic.h": "c",
+        "types.h": "c"
+    }
+}
