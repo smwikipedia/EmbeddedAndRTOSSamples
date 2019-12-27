@@ -7,6 +7,9 @@
 #define UDR 0x00
 #define UFR 0x18
 
+#define ARM_VERSATILE_PL011_UART0 0x101F1000
+#define ARM_VERSATILE_PL011_UART3 0x10009000
+
 typedef volatile struct uart {
     char *base;
     int n;
@@ -20,10 +23,10 @@ int uart_init()
     UART *up;
     for(i=0; i<4; i++){
         up = &uart[i];
-        up->base = (char *)(0x101F1000 + i*0x1000);
+        up->base = (char *)(ARM_VERSATILE_PL011_UART0 + i*0x1000);
         up->n = i;
     }
-    uart[3].base = (char *)(0x10009000);
+    uart[3].base = (char *)(ARM_VERSATILE_PL011_UART3);
 }
 
 
@@ -42,7 +45,7 @@ void uputc(UART *up, char c)
 void upgets(UART *up, char *s)
 {
     while((*s = ugetc(up))!='\r'){
-        uputc(up, *s);
+        uputc(up, *s);//echo the input from the UART back to the UART so user can see what he has just input
         s++;
     }
     *s = 0;
@@ -50,7 +53,7 @@ void upgets(UART *up, char *s)
 
 void uprints(UART *up, char *s)
 {
-    while(*s)
+    while(*s) //output the whole buffer to UART
     {
         uputc(up, *s++);
     }
