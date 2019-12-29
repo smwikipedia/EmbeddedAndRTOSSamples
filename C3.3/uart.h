@@ -36,5 +36,8 @@ typedef volatile struct uart {
     u32 outdata, outroom, outhead, outtail;
     volatile u32 txon;  // 1 = TX interrput is on
 } UART;
-#endif
 
+void uart_init();
+
+
+#endif

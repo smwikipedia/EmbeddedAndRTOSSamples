@@ -3,7 +3,7 @@
 
 UART uart[4]; // 4 UART structures
 
-int uart_init()
+void uart_init()
 {
     u32 i;
     UART *up;
@@ -98,7 +98,7 @@ void uputc(UART *up, u8 c)
         //unlock();
         return;
     }
-    u32 i = *(up->base + UFR); // why do this?
+    //u32 i = *(up->base + UFR); // why do this?
     while(*(up->base + UFR)& TXFF);
     *(up->base + UDR) = (u32)c;
     *(up->base + IMSC) |= 0x30;
@@ -111,6 +111,8 @@ void ugets(UART *up, char *s)
     {
         uputc(up, *s++);
     }
+    *s++ = '\n'; //add a line break
+    *s++ = '\r'; //change to a new line, otherwise, the line just echoed will be overwritten.
     *s = 0;
 }
 

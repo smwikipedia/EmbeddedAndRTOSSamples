@@ -15,12 +15,14 @@ void main()
     VIC_INTENABLE |= UART0_IRQ_VIC_BIT;
     VIC_INTENABLE |= UART1_IRQ_VIC_BIT;
 
+    uart_init();
     up= &uart[0];
 
     while(1)
     {
-        uprints(up, "Enter a line from UARTS\n\r");
+        uprints(up, "Enter a line from UART\n\r");
         ugets(up, line);
+        uprints(up, "\n\rYou have entered below line from UART\n\r");
         uprints(up, line);
     }
 }
