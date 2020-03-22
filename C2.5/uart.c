@@ -1,11 +1,11 @@
-#define TXFE 0x80
-#define TXFF 0x20
-#define RXFE 0x10
-#define RXFF 0x40
-#define BUSY 0x08
+#define TXFE 0x80 // Transmit FIFO or holding byte Empty
+#define TXFF 0x20 // Transmit FIFO or holding byte Full
+#define RXFE 0x10 // Receive FIFO or holding byte Empty
+#define RXFF 0x40 // Receive FIFO or holding byte Full
+#define BUSY 0x08 // set as soon as the transmit FIFO becomes non-empty.
 
 #define UDR 0x00
-#define UFR 0x18
+#define UFR 0x18 // UART Flag Register
 
 #define ARM_VERSATILE_PL011_UART0 0x101F1000
 #define ARM_VERSATILE_PL011_UART3 0x10009000
