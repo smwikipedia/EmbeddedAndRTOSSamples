@@ -22,7 +22,7 @@ void main()
     {
         uprints(up, "Enter a line from UART\n\r");
         ugets(up, line);
-        uprints(up, "\n\rYou have entered below line from UART\n\r");
+        uprints(up, "You have entered below line from UART\n\r");
         uprints(up, line);
     }
 }
