@@ -48,6 +48,8 @@ void do_tx(UART *up)
         /*
         Clear the MIS[TX] by disable IMSC[TX] interrupt.
         Otherwise, the MIS[TX] will never disappear and the execution will dead loop in the IRQ handing.
+        It can also be viewed as some kind of acknoledgement of the single-char trasmission completion.
+        
         */
         *(up->base + IMSC) = RX_BIT;
         up->txon = 0; // turn off txon flag
@@ -57,7 +59,13 @@ void do_tx(UART *up)
     //below code never executes in the non-FIFO mode.
     c = up->outbuf[up->outtail++];
     up->outtail %= SBUFSIZE;
-    *(up->base + UDR) = (u32)c; // write c to output data register
+
+    /*
+    Write c to output data register, this will also clear the TX IRQ signal for this time according to the UART PL011 spec.
+    After the new c get transmitted, a new TX IRQ will be rasised.
+    So below code is definitely necessary for robustness.
+    */
+    *(up->base + UDR) = (u32)c;
     up->outdata--;
     up->outroom++;
 }
@@ -94,8 +102,15 @@ u8 ugetc(UART *up)
 
 void uputc(UART *up, u8 c)
 {
-    // for the 1st char to ouput, the txon is 0.
-    // in a non-FIFO mode, below condition block will never be entered.
+    /*
+    For the 1st char to ouput, the txon is 0.
+    During the UART transmission, the txon will be 1.
+    If for some reason, the UART hardware encounters some delay, even for transmitting a single char,
+    the cpu will still be running the uputs() -> uputc(), so the chars will just keep coming.
+    then newly incoming chars will be stored into up->outbuf[], and the up->txon will never be set to 0 in the do_tx().
+    So in this case, below code wil be executed.
+    It's just a software buffer to tolerate some potential hardware delays.
+    */
     if(up->txon)
     {
         up->outbuf[up->outhead++] = c;
@@ -110,17 +125,6 @@ void uputc(UART *up, u8 c)
     while(*(up->base + UFR) & TXFF);// if the tx holding register is full, busy wait
     
     /*
-    Write the char data into the data register.
-    The write operation initiates the transmission.
-    During the debug, I never see the UDR holding the data c.
-    I guess because in the non-FIFO mode, the data is immediately transmitted
-    and UDR returns to 0 immediately, or never changes.
-    And I did see the client for this UART port on the other side showing the transmitted data immediately.
-    But the MIS[TX] bit is not signaled yet!
-    */
-    *(up->base + UDR) = (u32)c;
-    
-    /*
     After the single char is transmitted as above,
     We enables the IMSC[TX] bit.
     At the same time, both the IMSC[TX] and MIS[TX] change to 1,
@@ -130,10 +134,29 @@ void uputc(UART *up, u8 c)
     up->txon = 1;// this line should precede the next line to ensure up-txon correctly reflect the status of TX interrupt.
     
     /*
-    a TX interrupt is raised *at this very moment*! ->IRQ_handler() -> uart_handler() -> do_tx()
-    So we can see, TX actually means the completion of a single-char transmission.
+    Enable both TX and RX interrupts.
+    A TX interrupt will raise once the single-char is transmitted.
+    We don't know when the single char will be transmitted.
+    What we can do is to *enable* the interrupt just in case.
+
+    Ref UART PL011 spec：
+    If the FIFOs are disabled (have a depth of one location) and there is no data present in the transmitters single location,
+    the transmit interrupt is asserted HIGH. It is cleared by performing a single write to the transmit FIFO, or by clearing the
+    interrupt
     */
     *(up->base + IMSC) |= (RX_BIT | TX_BIT);
+
+    /*
+    Write the char data into the data register.
+    The write operation initiates the transmission according to the UART PL011 spec.
+    During the debug with qemu, I never see the UDR holding the data c.
+    I guess because in the non-FIFO mode, the data is immediately transmitted
+    and UDR returns to 0 immediately, or never changes.
+    And I did see the client for this UART port on the other side showing the transmitted data immediately.
+    After the UART hardware transmitted this single char, the MIS[TX] bit will be signaled!
+    We just rely on the hardware...
+    */
+    *(up->base + UDR) = (u32)c;
 
 }
 
