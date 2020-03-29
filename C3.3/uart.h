@@ -14,7 +14,7 @@
 #define UDS 0x04 // receive status or error clear
 #define UFR 0x18 // flag, it reflects the working status of a UART instance
 #define CNTL 0x2C // line control
-#define IMSC 0x38 // interrupt mask set or clear, this disable/enable a certain interrupt
+#define IMSC 0x38 // interrupt mask set/clear, this enable(set)/disable(clear) a certain interrupt
 #define MIS 0x40 // masked interrupt status, this reflect the status of a certain interrupt
 
 //UART flag register (offset 0x18) values
@@ -31,6 +31,27 @@
 //string buffer size
 #define SBUFSIZE 128
 
+/*
+
+outdata: how many chars in outbuf to be transmitted
+outroom: how much room remaining in outbuf
+outhead: the latest char buffered
+outtail: the next char to be transmitted
+
+logically, outhead is ahead of outtail
+
+**************************************************  outbuf[]
+              ^                     ^
+              |                     |
+(start)     outtail                outhead     (end)
+
+
+**************************************************  inbuf[]
+              ^                     ^
+              |                     |
+(start)     intail                inhead       (end)
+
+*/
 typedef volatile struct uart {
     u8 * base;    // base address of UART
     u32 n;          // uart id 0~3
