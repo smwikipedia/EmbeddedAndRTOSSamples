@@ -3,6 +3,10 @@
 
 UART uart[4]; // 4 UART structures
 
+// defined in ts.S
+extern void lock();
+extern void unlock();
+
 void uart_init()
 {
     u32 i;
@@ -116,12 +120,23 @@ u8 ugetc(UART *up)
 {
     u8 c;
     while(up->indata <=0); // no data in buffer, just block!
-    c = up->inbuf[up->intail++];
+    c = up->inbuf[up->intail];
+   
+    /*
+    When updating the control variables in the upper-half of an interrupt-based device driver,
+    we must ensure all the updating actions to the control variables are finished atomically.
+    That is, it must not be interrupted. Otherwise there can be inconsistence.
+    So we call lock() to disalbe IRQ for now.
+
+    But in an interrupt handler(the lower-half), we don't need to worry about contention with the upper-half.
+    Because we are sure that the upper-half has been interrupted and is not running.
+    */
+    lock();
+    up->intail++;
     up->intail %= SBUFSIZE;
-    // lock();
     up->indata--; // a buffered char is handled
     up->inroom++; // a buffered char is handled
-    // unlock();
+    unlock();
     return c;
 }
 
@@ -139,12 +154,13 @@ void uputc(UART *up, u8 c)
     */
     if(up->txon)
     {
-        up->outbuf[up->outhead++] = c;
-        up->outhead %= SBUFSIZE;
-        //lock();
+        up->outbuf[up->outhead] = c;
+        lock();
+        up->outhead++;
+        up->outhead %= SBUFSIZE;        
         up->outdata++; // a new char is buffered
         up->outroom--; // a new char is buffered
-        //unlock();
+        unlock();
         return;
     }
     //u32 i = *(up->base + UFR); // why do this?

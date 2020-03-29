@@ -1,6 +1,6 @@
 .text
 .code 32
-.global reset_handler, vectors_start, vectors_end
+.global reset_handler, vectors_start, vectors_end, lock, unlock
 
 reset_handler:
     ldr sp, =svc_stack_top // set SVC mode stack
@@ -24,6 +24,19 @@ prefetch_abort_handler:
 data_abort_handler:
 fiq_handler:
     b .
+
+lock:
+    mrs r0, cpsr
+    orr r0, r0, #0x80 // set the I bit to disable IRQ
+    msr cpsr, r0
+    mov pc, lr // return, by ARM C calling convention, the lr=pc-4, i.e. the next instruction
+
+unlock:
+    mrs r0, cpsr
+    bic r0, r0, #0x80 // clear the I bit to enable IRQ
+    msr cpsr, r0
+    mov pc, lr
+
 
 vectors_start:
     ldr pc, reset_handler_addr
