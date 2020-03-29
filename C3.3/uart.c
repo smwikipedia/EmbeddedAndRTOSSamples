@@ -130,6 +130,19 @@ u8 ugetc(UART *up)
 
     But in an interrupt handler(the lower-half), we don't need to worry about contention with the upper-half.
     Because we are sure that the upper-half has been interrupted and is not running.
+
+    However, there's another issue.
+    In this sample, the UART works in single-char mode.
+    If the actions in upper-half take too long to finish, there can be >1 chars arriving at the UART.
+    But the IRQ is disabled during the upper-half processing.
+    So the do_rx() will not be invoked by the UART to collect the incoming chars in time.
+    So it is possible that some char will be missed.
+
+    And that is why there is a hardware FIFO buffer in the UART.
+
+    In short, we need 2 buffers, one in software and one in hardware,
+    to smoothly couple the hardware and software.
+
     */
     lock();
     up->intail++;
