@@ -98,12 +98,20 @@ void scrollup() // scroll UP one row (the hard way)
     if(gDisplayContext.cursor_row == 1) return;
 
     u32 font_block_height = gDisplayContext.font_display_height + gDisplayContext.v_font_space;
-    u32 end = (gDisplayContext.max_row - 1) * gDisplayContext.screen_width * gDisplayContext.font_display_height;
-    for(u32 i=0; i< end; i++)
+    u32 row_block_size = gDisplayContext.screen_width * font_block_height;
+    u32 end = (gDisplayContext.max_row - 1) * row_block_size;
+
+    //move all rows one row up.
+    for(u32 i=0; i<=end; i++)
     {
         fb[i]=fb[i + gDisplayContext.screen_width * font_block_height];
     }
-    //gDisplayContext.cursor_row--;
+
+    //clear the last row
+    for(u32 i=end+1; i<= end + row_block_size; i++)
+    {
+        fb[i]=0x00000000;
+    }    
 }
 
 void scrolldown() // scroll DOWN one row (the hard way)
