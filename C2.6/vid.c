@@ -1,23 +1,36 @@
 #include "types.h"
 #include "vid.h"
 
+
 volatile u32 *fb;
+DisplayContext gDisplayContext = {0};
+
+dchar_ptr dcharX;
+dchar_ptr undcharX;
 
 
 u32 fbuf_init()
 {
-    fb = (u32 *)(0x200000); //frame buffer starts at 2M
+    fb = (u32 *)(0x200000); //frame buffer starts at 2M, decided by the board spec
+
+    InitializeFontContext12x16();
+
     /* for 640x480 VGA */
-    *(volatile u32 *)(0x1000001c) = 0x00002C77;
-    *(volatile u32 *)(0x10120000) = 0x3F1F3F9C;
-    *(volatile u32 *)(0x10120004) = 0x090B61DF;
-    *(volatile u32 *)(0x10120008) = 0x067F1800;
+    // *(volatile u32 *)(0x1000001c) = 0x00002C77;
+    // *(volatile u32 *)(0x10120000) = 0x3F1F3F9C;
+    // *(volatile u32 *)(0x10120004) = 0x090B61DF;
+    // *(volatile u32 *)(0x10120008) = 0x067F1800;
+    // gDisplayContext.screen_width = 640;
+    // gDisplayContext.screen_height = 480;
 
     /* for 800x600 SVGA */
-    // *(volatile u32 *)(0x1000001c) = 0x00002CAC;
-    // *(volatile u32 *)(0x10120000) = 0x1313A4C4;
-    // *(volatile u32 *)(0x10120004) = 0x0505F6F7;
-    // *(volatile u32 *)(0x10120008) = 0x071F1800;
+    *(volatile u32 *)(0x1000001c) = 0x00002CAC;
+    *(volatile u32 *)(0x10120000) = 0x1313A4C4;
+    *(volatile u32 *)(0x10120004) = 0x0505F6F7;
+    *(volatile u32 *)(0x10120008) = 0x071F1800;
+    gDisplayContext.screen_width = 800;
+    gDisplayContext.screen_height = 600;
+
 
     *(volatile u32 *)(0x10120010) = 0x200000; //fbuf
     *(volatile u32 *)(0x10120018) = 0x82B;
@@ -47,11 +60,69 @@ void show_bmp(u8 *p, u32 start_row, u32 start_col)
             b=*pp;
             g=*(pp+1);
             r=*(pp+2);
-            pixel = (b<<16)|(g<<8)|r;
-            fb[i*WIDTH + j]=pixel;
+            pixel = (b<<16)|(g<<8)|r; // 24-bit color BMP
+            fb[i*gDisplayContext.screen_width + j]=pixel; // in the frame buffer, a pixel occupies 32-bit.
             pp +=3; //advance pp to next pixel
         }
         p -=rsize; // to preceding row
     }
 }
+
+
+/*
+Text Mode APIs in terms of column and row.
+Here are the common APIs regardless of font bitmap styles.
+The font-specific APIs live in their respective files, such as char12x16.c
+*/
+
+void clrpix(u32 x, u32 y) // clear pixel at screen pixel location (x, y)
+{
+    u32 pix = y*gDisplayContext.screen_width + x;
+    fb[pix] = 0x00000000;
+}
+
+void setpix(u32 x, u32 y) // set pixel at screen pixel location (x, y)
+{
+    u32 pix = y*gDisplayContext.screen_width + x;
+    fb[pix] = 0x0000FF00; // GREEN
+}
+
+
+void scroll() // scroll UP one line (the hard way)
+{
+
+}
+
+
+void kpchar(u8 c, u32 row, u32 col) // print char at screen char location (row, col)
+{
+    u32 x, y;
+    x = (col-1) * (gDisplayContext.font_display_width + gDisplayContext.h_font_space);
+    y = (row-1) * (gDisplayContext.font_display_height + gDisplayContext.v_font_space);
+    dcharX(c, x, y);
+}
+
+void unkpchar(u8 c, u32 row, u32 col) // erase char c at screen char location (row, col)
+{
+    u32 x, y;
+    x = (col-1) * (gDisplayContext.font_bitmap_width + gDisplayContext.h_font_space);
+    y = (row-1) * (gDisplayContext.font_bitmap_height + gDisplayContext.v_font_space);
+    undcharX(c, x, y);    
+}
+
+void erasechar(u32 row, u32 col) // erase any char at screen char location (row, col)
+{
+    
+}
+
+void clrcursor() // clear cursor at current (row, col)
+{
+    erasechar(gDisplayContext.current_char_row, gDisplayContext.current_char_col);
+}
+
+void putcursor(u8 c) // put cursor (row, col)
+{
+    
+}
+
 
