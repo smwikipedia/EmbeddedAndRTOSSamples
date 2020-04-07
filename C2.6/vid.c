@@ -32,6 +32,11 @@ u32 fbuf_init()
     gDisplayContext.screen_height = 600;
 
 
+    gDisplayContext.cursor_row = 1;
+    gDisplayContext.cursor_col = 1;
+    gDisplayContext.max_col = gDisplayContext.screen_width / (gDisplayContext.font_display_width + gDisplayContext.h_font_space);
+    gDisplayContext.max_row = gDisplayContext.screen_height / (gDisplayContext.font_display_height + gDisplayContext.v_font_space);
+
     *(volatile u32 *)(0x10120010) = 0x200000; //fbuf
     *(volatile u32 *)(0x10120018) = 0x82B;
 }
@@ -88,7 +93,20 @@ void setpix(u32 x, u32 y) // set pixel at screen pixel location (x, y)
 }
 
 
-void scroll() // scroll UP one line (the hard way)
+void scrollup() // scroll UP one row (the hard way)
+{
+    if(gDisplayContext.cursor_row == 1) return;
+
+    u32 font_block_height = gDisplayContext.font_display_height + gDisplayContext.v_font_space;
+    u32 end = (gDisplayContext.max_row - 1) * gDisplayContext.screen_width * gDisplayContext.font_display_height;
+    for(u32 i=0; i< end; i++)
+    {
+        fb[i]=fb[i + gDisplayContext.screen_width * font_block_height];
+    }
+    //gDisplayContext.cursor_row--;
+}
+
+void scrolldown() // scroll DOWN one row (the hard way)
 {
 
 }
@@ -105,24 +123,59 @@ void kpchar(u8 c, u32 row, u32 col) // print char at screen char location (row, 
 void unkpchar(u8 c, u32 row, u32 col) // erase char c at screen char location (row, col)
 {
     u32 x, y;
-    x = (col-1) * (gDisplayContext.font_bitmap_width + gDisplayContext.h_font_space);
-    y = (row-1) * (gDisplayContext.font_bitmap_height + gDisplayContext.v_font_space);
+    x = (col-1) * (gDisplayContext.font_display_width + gDisplayContext.h_font_space);
+    y = (row-1) * (gDisplayContext.font_display_height + gDisplayContext.v_font_space);
     undcharX(c, x, y);    
 }
 
 void erasechar(u32 row, u32 col) // erase any char at screen char location (row, col)
 {
-    
+    u32 x, y;
+    x = (col-1) * (gDisplayContext.font_display_width + gDisplayContext.h_font_space);
+    y = (row-1) * (gDisplayContext.font_display_height + gDisplayContext.v_font_space);
+
+    for(u32 i=0; i<gDisplayContext.font_display_height; i++) // 16
+    {
+        for(u32 j=0;j<gDisplayContext.font_display_width; j++) // 10
+        {
+            u32 xx = x + j;
+            u32 yy = y + i;
+            clrpix(xx, yy);
+        }
+    }      
 }
 
 void clrcursor() // clear cursor at current (row, col)
 {
-    erasechar(gDisplayContext.current_char_row, gDisplayContext.current_char_col);
+    erasechar(gDisplayContext.cursor_row, gDisplayContext.cursor_col);
 }
 
+/*
+Print char at current cursor location.
+And then move cursor to the next available location.
+The cursor movement can depends on 'c' for '\n', 'r', and '\b'
+The cursor always stays at a printable location.
+*/
 void putcursor(u8 c) // put cursor (row, col)
 {
-    
+    kpchar(c, gDisplayContext.cursor_row, gDisplayContext.cursor_col);
+
+    if(gDisplayContext.cursor_col == gDisplayContext.max_col)
+    {
+        gDisplayContext.cursor_col = 1;
+        if(gDisplayContext.cursor_row == gDisplayContext.max_row)
+        {
+            scrollup();            
+        }
+        else
+        {
+            gDisplayContext.cursor_row++;
+        }
+    }
+    else
+    {
+        gDisplayContext.cursor_col++;
+    }
 }
 
 

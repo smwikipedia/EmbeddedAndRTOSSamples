@@ -22,8 +22,11 @@ typedef struct
     
     u32 current_pixel_x; // current pixel postion x
     u32 current_pixel_y; // current pixel postion y
-    u32 current_char_row; // current char postion row
-    u32 current_char_col; // current char postion col
+    u32 cursor_row; // current char postion row
+    u32 cursor_col; // current char postion col
+
+    u32 max_row;
+    u32 max_col;
 }DisplayContext;
 
 extern DisplayContext gDisplayContext;
@@ -46,6 +49,10 @@ void clrpix(u32 x, u32 y);
 void setpix(u32 x, u32 y);
 
 void kpchar(u8 c, u32 row, u32 col);
+void unkpchar(u8 c, u32 row, u32 col);
+void erasechar(u32 row, u32 col);
+void scrollup();
+void putcursor(u8 c);
 
 // //Display a char at row, col.
 // void DisplayChar(u8 c, u32 row, u32 col);
