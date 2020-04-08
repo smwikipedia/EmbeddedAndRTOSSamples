@@ -8,7 +8,7 @@
             "type": "gdb",
             "request": "attach",
             "name": "Attach to gdbserver",
-            "executable": "C:/D/myLibrary/OS/Embedded and RTOS/EmbeddedAndRTOSSamples/C3.3/build/t.elf",
+            "executable": "../build/t.elf",
             "target": "127.0.0.1:1234",
             "remote": true,
             "cwd": "${workspaceRoot}",
