@@ -1,13 +1,7 @@
-#ifndef UART_H
-#define UART_H
+#ifndef PL011_UART_H
+#define PL011_UART_H
 
 #include "types.h"
-
-//offsets of 4 UARTs on versatilepb board.
-#define ARM_VERSATILE_PL011_UART0 0x101F1000 // check the memory map in versatilepb spec
-#define ARM_VERSATILE_PL011_UART1 0x101F2000
-#define ARM_VERSATILE_PL011_UART2 0x101F3000
-#define ARM_VERSATILE_PL011_UART3 0x10009000 // slightly different from UART0/1/2
 
 //UART register offsets, check the PL110 spec
 #define UDR 0x00 // data 
@@ -63,6 +57,8 @@ typedef volatile struct uart {
 } UART;
 
 void uart_init();
-
+void uart_handler(UART *up);
+void uprints(UART *up, u8 *s);
+void ugets(UART *up, char *s);
 
 #endif

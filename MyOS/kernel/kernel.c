@@ -1,13 +1,5 @@
 #include "types.h"
-#include "pl190.h"
-#include "pl011.h"
-#include "display.h"
-
-extern UART uart[4];
-extern void uart_handler(UART *up);
-
-extern void uprints(UART *up, u8 *s);
-extern void ugets(UART *up, char *s);
+#include "versatilepb.h"
 
 void main()
 {

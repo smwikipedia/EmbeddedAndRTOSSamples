@@ -1,5 +1,5 @@
-#ifndef VID_H
-#define VID_H
+#ifndef DISPLAY_H
+#define DISPLAY_H
 #include "types.h"
 #include "font12x16.h"
 

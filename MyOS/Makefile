@@ -55,6 +55,12 @@ OBJ_RESET = $(BUILD_DIR)/reset.o
 $(OBJ_RESET) : $(KERNEL_DIR)/reset.S
 	$(AS) $(AS_FLAGS) $(KERNEL_DIR)/reset.S -o $(BUILD_DIR)/reset.o
 
+OBJ_BOARD = $(BUILD_DIR)/versatilepb.o
+$(OBJ_BOARD) : \
+	$(DEVICE_DIR)/board/versatilepb.c \
+	$(DEVICE_DIR)/board/versatilepb.h
+	$(GCC) $(GCC_FLAGS) $(DEVICE_DIR)/board/versatilepb.c -o $(OBJ_BOARD)
+
 OBJ_KERNEL = \
 	$(BUILD_DIR)/kernel.o \
 	$(BUILD_DIR)/display.o
@@ -68,8 +74,8 @@ CLEAN :
 	$(RMDIR) $(BUILD_DIR)
 	$(MKDIR) $(BUILD_DIR)
 
-MYOS: $(OBJ_RESET) $(OBJ_UART) $(OBJ_FONT) $(OBJ_KERNEL) $(OBJ_BMP)
-	$(LD) $(OBJ_RESET) $(OBJ_UART) $(OBJ_FONT) $(OBJ_KERNEL) $(OBJ_BMP) $(WORKSPACE)/$(LIBS) $(LD_FLAGS) -o $(BUILD_DIR)/myos.elf
+MYOS: $(OBJ_RESET) $(OBJ_BOARD) $(OBJ_UART) $(OBJ_FONT) $(OBJ_KERNEL) $(OBJ_BMP)
+	$(LD) $(OBJ_RESET) $(OBJ_BOARD) $(OBJ_UART) $(OBJ_FONT) $(OBJ_KERNEL) $(OBJ_BMP) $(WORKSPACE)/$(LIBS) $(LD_FLAGS) -o $(BUILD_DIR)/myos.elf
 	$(OBJCOPY) $(OBJCOPY_FLAGS) $(BUILD_DIR)/myos.elf $(BUILD_DIR)/myos.bin
 
 QEMU_CMD = qemu-system-arm -s -M versatilepb -cpu arm926 -serial telnet:localhost:1122,server -kernel

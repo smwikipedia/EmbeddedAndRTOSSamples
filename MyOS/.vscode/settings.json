@@ -1,6 +1,8 @@
 {
     "files.associations": {
         "display.h": "c",
-        "types.h": "c"
+        "types.h": "c",
+        "pl011.h": "c",
+        "versatilepb.h": "c"
     }
 }
