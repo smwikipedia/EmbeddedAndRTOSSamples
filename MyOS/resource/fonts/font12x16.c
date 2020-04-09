@@ -13,8 +13,8 @@ void InitializeFontContext12x16()
     gDisplayContext.font_display_width = 12;
     gDisplayContext.font_display_height = 16;
 
-    gDisplayContext.v_font_space = 2;
-    gDisplayContext.h_font_space = 2;
+    gDisplayContext.v_font_space = 0;
+    gDisplayContext.h_font_space = 0;
 
     dcharX = dchar12x16;
     undcharX = undchar12x16;
