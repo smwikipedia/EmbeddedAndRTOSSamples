@@ -61,7 +61,7 @@ void undchar12x16(u8 c, u32 x, u32 y) // erase a char at scree location pixel lo
         for(u32 j=0;j<gDisplayContext.font_bitmap_width; j++) // 8
         {
             u32 xx = x + ii;
-            u32 yy = y + half*8 - j;
+            u32 yy = y + half*8 -1 - j;
             u8 *scan_line = p + i;
             u8 bit_test = (u8)1 << (7-j);
             if(*scan_line & bit_test)
