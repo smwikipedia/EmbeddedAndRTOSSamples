@@ -8,9 +8,9 @@ void InitializeFontContext12x16()
 {
     gDisplayContext.font_bitmap_width = 8;
     gDisplayContext.font_bitmap_height = 24;    
-    gDisplayContext.font_bitmap_size = 24;
+    gDisplayContext.font_bitmap_size = 24; // in bytes
     
-    gDisplayContext.font_display_width = 12;
+    gDisplayContext.font_display_width = 12; // the display size of a font block
     gDisplayContext.font_display_height = 16;
 
     gDisplayContext.v_font_space = 0;
@@ -35,7 +35,7 @@ void dchar12x16(u8 c, u32 x, u32 y) // display a char at scree pixel location (x
         for(u32 j=0;j<gDisplayContext.font_bitmap_width; j++) // 8
         {
             u32 xx = x + ii;
-            u32 yy = y + half*8 - j;
+            u32 yy = y + half*8 - 1 - j;
             u8 *scan_line = p + i;
             u8 bit_test = (u8)1 << (7-j);
             if(*scan_line & bit_test)

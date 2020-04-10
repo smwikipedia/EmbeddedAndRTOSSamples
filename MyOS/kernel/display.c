@@ -72,13 +72,13 @@ void scrollup() // scroll UP one row (the hard way)
     u32 end = (gDisplayContext.max_row - 1) * row_block_size;
 
     //move all rows one row up.
-    for(u32 i=0; i<=end; i++)
+    for(u32 i=0; i<end; i++)
     {
         fb[i]=fb[i + gDisplayContext.screen_width * font_block_height];
     }
 
     //clear the last row
-    for(u32 i=end+1; i<= end + row_block_size; i++)
+    for(u32 i=end; i < end + row_block_size; i++)
     {
         fb[i]=0x00000000;
     }    
