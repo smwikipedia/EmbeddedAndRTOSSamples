@@ -210,4 +210,174 @@ void kputc(u8 c)
     kpchar('_', gDisplayContext.cursor_row, gDisplayContext.cursor_col);    
 }
 
+void kprints(u8 *s)
+{
+    while(*s)
+    {
+        kputc(*s);
+        s++;
+    }
+}
 
+u8* tab = "0123456789ABCDEF";
+void krpx(u32 x)
+{
+    if(x == 0)
+    {
+        return;
+    }
+
+    u8 c = '0';
+    if(x>0)
+    {
+        c = tab[x%16];
+        krpx(x/16);
+    }
+    kputc(c);
+}
+
+void kprintx(i32 x)
+{
+    if(x==0)
+    {
+        kputc('0');
+        return;
+    }
+
+    if(x<0)
+    {
+        kputc('-');
+        x = -x;
+    }
+
+    krpx(x);
+}
+
+void krpu(u32 x)
+{
+    if(x == 0)
+    {
+        return;
+    }
+    u8 c = '0';    
+    if(x>0)
+    {
+        c = tab[x%10];
+        krpu(x/10);
+    }
+    kputc(c);
+}
+
+void kprintu(u32 x)
+{
+    if(x==0)
+    {
+        kputc('0');
+    }
+    else
+    {
+        krpu(x);
+    }    
+}
+
+void kprinti(i32 x)
+{
+    if(x<0)
+    {
+        kputc('-');
+        x = -x;
+    }
+
+    kprintu(x); 
+}
+
+void kprintf(u8* fmt, ...)
+{
+    u32 *ip;
+    u8 *cp;
+    cp = fmt;
+    ip = (u32*)((u32)&fmt + sizeof(u8*));//(u32*)&fmt + 1;
+
+    while(*cp)
+    {
+        if(*cp != '%')
+        {
+            kputc(*cp);
+            if(*cp == '\n')
+            {
+                kputc('\r');
+            }
+            cp++;
+            continue;
+        }
+        cp++;
+        switch(*cp)
+        {
+            case 'c':
+                kputc((u8)*ip);
+                break;
+            case 's':
+                kprints((u8*)*ip);
+                break;
+            case 'd':
+                kprinti(*ip);
+                break;
+            case 'u':
+                kprintu(*ip);
+                break;
+            case 'x':
+                kprintx(*ip);
+                break;            
+        }
+        cp++;
+        ip++;
+    }
+}
+
+void kprintf2(u8* fmt, ...)
+{
+    u8 *ip;
+    u8 *cp;
+    cp = fmt;
+    ip = (u8*)((u32)&fmt + sizeof(u8*));
+
+    while(*cp)
+    {
+        if(*cp != '%')
+        {
+            kputc(*cp);
+            if(*cp == '\n')
+            {
+                kputc('\r');
+            }
+            cp++;
+            continue;
+        }
+        cp++;
+        switch(*cp)
+        {
+            case 'c':
+                kputc((u8)*ip);
+                ip = ip + sizeof(u8);
+                break;
+            case 's':
+                kprints((u8*)(*((u32*)ip)));
+                ip = ip + sizeof(u8*);
+                break;
+            case 'd':
+                kprinti(*ip);
+                ip = ip + sizeof(u32);
+                break;
+            case 'u':
+                kprintu(*ip);
+                ip = ip + sizeof(i32);
+                break;
+            case 'x':
+                kprintx(*ip);
+                ip = ip + sizeof(i32);
+                break;            
+        }
+        cp++;
+        //ip++;
+    }
+}

@@ -2,6 +2,7 @@
 #define TYPES_H
 
 typedef unsigned int u32;
+typedef int i32;
 typedef unsigned char u8;
 
 #define NULL 0

@@ -16,27 +16,40 @@ void main()
     u8* pLine = NULL;
     //show_bmp(p, 0, 0);// show the image at the screen location (0,0)
     u8 c = ' ';
+
+    uprints(up, "[Debug Will Start]\n\r");
+    kprintf("%c,%s,%d,%u,0x%x\n", 'A', "SM", -123, 321, 0xABCD);
+    kprintf("%c,%c,%c,%c,%c\n", 'A', 'B', 'C', 'D', 'E');
+    kprintf("%c\n", 'A');
+    kprintf("%s\n", "SM");
+    kprintf("%d\n", -123);
+    kprintf("%u\n", 321);
+    kprintf("0x%x\n", 0xABCD);
+    kprintf("0x%x\n", -0xCDEF);
+
+
     while(1)
     {
-        if(gDisplayContext.cursor_row == gDisplayContext.max_row)
-        {
-            uprints(up, "[Input something through UART and then press Enter to show some chars:]\n\r");
-            ugets(up, line);
-            uprints(up, "[And you have entered below line from UART:]\n\r");
-            uprints(up, line);
-            pLine = &line[0];
-            while(*pLine)
-            {
-                kputc(*pLine);
-                pLine++;
-            }
+        ;
+        // if(gDisplayContext.cursor_row == gDisplayContext.max_row)
+        // {
+        //     uprints(up, "[Input something through UART and then press Enter to show some chars:]\n\r");
+        //     ugets(up, line);
+        //     uprints(up, "[And you have entered below line from UART:]\n\r");
+        //     uprints(up, line);
+        //     pLine = &line[0];
+        //     while(*pLine)
+        //     {
+        //         kputc(*pLine);
+        //         pLine++;
+        //     }
 
-        }
-        else
-        {
-            kputc(c);
-            c = (c+1>'~')?' ':c+1;  
-        }
+        // }
+        // else
+        // {
+        //     kputc(c);
+        //     c = (c+1>'~')?' ':c+1;  
+        // }
     }
 }
 

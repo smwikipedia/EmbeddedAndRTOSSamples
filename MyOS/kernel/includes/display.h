@@ -57,6 +57,7 @@ void scrollup();
 void putcursor(u8 c);
 void clrcursor();
 void kputc(u8 c);
+void kprintf(u8* fmt, ...);
 
 // //Display a char at row, col.
 // void DisplayChar(u8 c, u32 row, u32 col);

@@ -8,12 +8,12 @@
             "type": "gdb",
             "request": "attach",
             "name": "Attach to gdbserver",
-            "executable": "../build/myos.elf",
+            "executable": "${workspaceRoot}/build/myos.elf",
             "target": "127.0.0.1:1234",
             "remote": true,
             "cwd": "${workspaceRoot}",
             "valuesFormatting": "parseText",
-            "gdbpath": "C:/D/DevBins/gnuarmemb/arm-none-eabi/bin/gdb.exe"
+            "gdbpath": "C:/D/DevBins/gnuarmemb/bin/arm-none-eabi-gdb.exe"
         }
     ]
 }
