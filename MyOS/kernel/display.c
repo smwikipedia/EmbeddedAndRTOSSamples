@@ -136,6 +136,8 @@ The cursor always stays at a printable location.
 */
 void putcursor(u8 c) // put cursor (row, col)
 {
+    
+    erasechar(gDisplayContext.cursor_row, gDisplayContext.cursor_col);
     kpchar(c, gDisplayContext.cursor_row, gDisplayContext.cursor_col);
 
     if(gDisplayContext.cursor_col == gDisplayContext.max_col)
@@ -154,6 +156,7 @@ void putcursor(u8 c) // put cursor (row, col)
     {
         gDisplayContext.cursor_col++;
     }
+    kpchar('_', gDisplayContext.cursor_row, gDisplayContext.cursor_col);
 }
 
 
