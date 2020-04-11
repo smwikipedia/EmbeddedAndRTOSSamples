@@ -60,6 +60,7 @@ u32 fbuf_init()
     gDisplayContext.cursor_col = 1;
     gDisplayContext.max_col = gDisplayContext.screen_width / (gDisplayContext.font_display_width + gDisplayContext.h_font_space);
     gDisplayContext.max_row = gDisplayContext.screen_height / (gDisplayContext.font_display_height + gDisplayContext.v_font_space);
+    gDisplayContext.cursor = '_';
 
     *(volatile u32 *)(0x10120010) = 0x200000; //fbuf
     *(volatile u32 *)(0x10120018) = 0x82B;

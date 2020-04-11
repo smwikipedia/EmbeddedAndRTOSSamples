@@ -136,10 +136,61 @@ The cursor always stays at a printable location.
 */
 void putcursor(u8 c) // put cursor (row, col)
 {
-    
-    erasechar(gDisplayContext.cursor_row, gDisplayContext.cursor_col);
     kpchar(c, gDisplayContext.cursor_row, gDisplayContext.cursor_col);
+}
 
+void kputc(u8 c)
+{
+    clrcursor();
+
+    if(c == '\n')
+    {
+        if(gDisplayContext.cursor_row == gDisplayContext.max_row)
+        {
+            scrollup();// the gDisplayContext.cursor_row remains unchanged.
+        }
+        else
+        {
+            gDisplayContext.cursor_row++;
+        }
+        //gDisplayContext.cursor_col = 1; // '\n' shouldn't do this. this should be done by '\r'
+        putcursor(gDisplayContext.cursor);
+        return;
+    }
+    else if(c == '\r')
+    {
+        gDisplayContext.cursor_col = 1;
+        putcursor(gDisplayContext.cursor);
+        return;
+    }
+    else if(c == '\b') // backspace
+    {
+        //I don't support cross screen scroll yet.
+        if(gDisplayContext.cursor_row == 1)
+        {
+            if(gDisplayContext.cursor_col > 1)
+            {
+                gDisplayContext.cursor_col--;
+            }
+        }
+        else
+        {
+            if(gDisplayContext.cursor_col > 1)
+            {
+                gDisplayContext.cursor_col--;
+            }
+            else
+            {
+                gDisplayContext.cursor_col = gDisplayContext.max_col;
+                gDisplayContext.cursor_row--;
+            }            
+        }
+        putcursor(gDisplayContext.cursor);
+        return;
+    }
+
+    //Ordinary chars...
+    kpchar(c, gDisplayContext.cursor_row, gDisplayContext.cursor_col);
     if(gDisplayContext.cursor_col == gDisplayContext.max_col)
     {
         gDisplayContext.cursor_col = 1;
@@ -156,7 +207,7 @@ void putcursor(u8 c) // put cursor (row, col)
     {
         gDisplayContext.cursor_col++;
     }
-    kpchar('_', gDisplayContext.cursor_row, gDisplayContext.cursor_col);
+    kpchar('_', gDisplayContext.cursor_row, gDisplayContext.cursor_col);    
 }
 
 

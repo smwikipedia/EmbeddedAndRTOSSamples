@@ -27,6 +27,8 @@ typedef struct
 
     u32 max_row;
     u32 max_col;
+
+    u8 cursor;
 }DisplayContext;
 
 extern DisplayContext gDisplayContext;
@@ -53,6 +55,8 @@ void unkpchar(u8 c, u32 row, u32 col);
 void erasechar(u32 row, u32 col);
 void scrollup();
 void putcursor(u8 c);
+void clrcursor();
+void kputc(u8 c);
 
 // //Display a char at row, col.
 // void DisplayChar(u8 c, u32 row, u32 col);
