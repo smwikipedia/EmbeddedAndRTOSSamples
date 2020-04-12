@@ -78,7 +78,7 @@ MYOS: $(OBJ_RESET) $(OBJ_BOARD) $(OBJ_UART) $(OBJ_FONT) $(OBJ_KERNEL) $(OBJ_BMP)
 	$(LD) $(OBJ_RESET) $(OBJ_BOARD) $(OBJ_UART) $(OBJ_FONT) $(OBJ_KERNEL) $(OBJ_BMP) $(WORKSPACE)/$(LIBS) $(LD_FLAGS) -o $(BUILD_DIR)/myos.elf
 	$(OBJCOPY) $(OBJCOPY_FLAGS) $(BUILD_DIR)/myos.elf $(BUILD_DIR)/myos.bin
 
-QEMU_CMD = qemu-system-arm -s -S -M versatilepb -cpu arm926 -serial telnet:127.0.0.1:1122,server -kernel
+QEMU_CMD = qemu-system-arm -s -M versatilepb -cpu arm926 -serial telnet:127.0.0.1:1122,server -kernel
 
 DEBUG: MYOS
 	$(QEMU_CMD) $(BUILD_DIR)/myos.bin

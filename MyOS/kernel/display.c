@@ -334,6 +334,59 @@ void kprintf(u8* fmt, ...)
     }
 }
 
+/*
+This is a non-variadic function.
+It doesn't work because we cannot infer the other arguments through the 1st argument "fmt".
+Compiler generates different instructions for variadic function and normal function.
+*/
+void kprintf1(u8* fmt, u8 x1, u8* x2, i32 x3, i32 x4, i32 x5)
+{
+    u32 *ip;
+    u8 *cp;
+    cp = fmt;
+    ip = (u32*)((u32)&fmt + sizeof(u8*));//(u32*)&fmt + 1;
+
+    while(*cp)
+    {
+        if(*cp != '%')
+        {
+            kputc(*cp);
+            if(*cp == '\n')
+            {
+                kputc('\r');
+            }
+            cp++;
+            continue;
+        }
+        cp++;
+        switch(*cp)
+        {
+            case 'c':
+                kputc((u8)*ip);
+                break;
+            case 's':
+                kprints((u8*)*ip);
+                break;
+            case 'd':
+                kprinti(*ip);
+                break;
+            case 'u':
+                kprintu(*ip);
+                break;
+            case 'x':
+                kprintx(*ip);
+                break;            
+        }
+        cp++;
+        ip++;
+    }
+}
+
+/*
+This implementation is wrong.
+Seems each argument on stack occupies a 32-bit space.
+Even a single char occupies 4 bytes.
+*/
 void kprintf2(u8* fmt, ...)
 {
     u8 *ip;

@@ -18,6 +18,7 @@ void main()
     u8 c = ' ';
 
     uprints(up, "[Debug Will Start]\n\r");
+    //kprintf1("%c,%s,%d,%u,0x%x\n", 'A', "SM", -123, 321, 0xABCD);
     kprintf("%c,%s,%d,%u,0x%x\n", 'A', "SM", -123, 321, 0xABCD);
     kprintf("%c,%c,%c,%c,%c\n", 'A', 'B', 'C', 'D', 'E');
     kprintf("%c\n", 'A');
