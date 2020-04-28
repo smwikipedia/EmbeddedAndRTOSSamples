@@ -4,6 +4,7 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+        
         {
             "type": "gdb",
             "request": "attach",
@@ -13,7 +14,7 @@
             "remote": true,
             "cwd": "${workspaceRoot}",
             "valuesFormatting": "parseText",
-            "gdbpath": "C:/D/DevBins/gnuarmemb/bin/arm-none-eabi-gdb.exe"
+            "gdbpath": "C:/D/DevBins/ARM/gcc-arm-none-eabi-9-2019-q4-major-win32-profile-RM/bin/arm-none-eabi-gdb.exe"
         }
     ]
 }
