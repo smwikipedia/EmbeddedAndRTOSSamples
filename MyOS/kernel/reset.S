@@ -57,6 +57,6 @@ undef_handler_addr:              .word undef_handler
 swi_handler_addr:                .word swi_handler
 prefetch_abort_handler_addr:     .word prefetch_abort_handler
 data_abort_handler_addr:         .word data_abort_handler
-irq_handler_addr:                .word irq_handler
+irq_handler_addr:                .word irq_handler // it can be in the reset.S or the kernel.c
 fiq_handler_addr:                .word fiq_handler
 vectors_end:
