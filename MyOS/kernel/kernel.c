@@ -82,3 +82,11 @@ void IRQ_handler()
     }
 
 }
+
+/*
+If this one is used, comment out the "irq_handler:" in reset.S
+*/
+void __attribute__((interrupt)) irq_handler()
+{
+    IRQ_handler();
+}

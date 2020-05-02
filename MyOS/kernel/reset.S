@@ -11,12 +11,16 @@ reset_handler:
     bl main
     b .
 
-
+/*
+If this one is used, comment out the "irq_handler()" in kernel.c
+*/
+/*
 irq_handler:
     sub lr, lr, #4            // when IRQ happens, LR_irq = PC, the next instruction should be PC-4, so we substract 4 from LR here.
     stmfd sp!, {r0-r12, lr}   // stack r0-r12 and lr
     bl IRQ_handler            // call IRQ_handler() in C
     ldmfd sp!, {r0-r12, pc}^  // return
+*/
 
 undef_handler:
 swi_handler:
