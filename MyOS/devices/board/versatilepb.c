@@ -1,5 +1,6 @@
 #include "versatilepb.h"
 #include "pl011.h"
+#include "string.h"
 
 /*
 UART init
@@ -64,4 +65,38 @@ u32 fbuf_init()
 
     *(volatile u32 *)(0x10120010) = 0x200000; //fbuf
     *(volatile u32 *)(0x10120018) = 0x82B;
+}
+
+/*
+4 SP804 timers
+*/
+volatile TIMER timer[4]; //4 timers; 2 per unit; at 0x00 and 0x20
+
+void timer_init()
+{
+    int i;
+    TIMER *tp;
+    kprintf("timer_init()\n");
+    for (i = 0; i < 1; i++)
+    {
+        tp = &timer[i];
+        if (i == 0)
+            tp->base = (u32 *)0x101E2000;
+        if (i == 1)
+            tp->base = (u32 *)0x101E2020;
+        if (i == 2)
+            tp->base = (u32 *)0x101E3000;
+        if (i == 3)
+            tp->base = (u32 *)0x101E3020;
+        *(tp->base + TLOAD) = 0x0; // reset
+        *(tp->base + TVALUE) = 0xFFFFFFFF;
+        *(tp->base + TRIS) = 0x0;
+        *(tp->base + TMIS) = 0x0;
+        *(tp->base + TLOAD) = 0x100;
+        // CntlReg=1110-0110=|En=1|Periodic=1|IntE=1|Rsvd=0|scal=01|1=32bit|0=wrap|=0xE6
+        *(tp->base + TCNTL) = 0xE6;
+        *(tp->base + TBGLOAD) = 0x1C00;          // timer counter value
+        tp->tick = tp->hh = tp->mm = tp->ss = 0; // initialize wall clock
+        strcpy((u8 *)tp->clock, "00:00:00");
+    }
 }

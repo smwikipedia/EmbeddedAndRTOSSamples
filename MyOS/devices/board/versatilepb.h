@@ -4,7 +4,9 @@
 #include "pl190.h"
 #include "pl011.h"
 #include "pl110.h"
+#include "sp804.h"
 #include "display.h"
+
 
 
 /*
@@ -29,5 +31,10 @@ VIC for versatilepb
 //check the versatilepb spec for interrupt source bits arrangement
 #define UART0_IRQ_VIC_BIT (1<<12)
 #define UART1_IRQ_VIC_BIT (1<<13)
+
+//timer
+#define TIMER01_IRQ_VIC_BIT (1<<4)
+#define TIMER23_IRQ_VIC_BIT (1<<5)
+extern volatile TIMER timer[4]; //4 timers; 2 per unit; at 0x00 and 0x20
 
 #endif

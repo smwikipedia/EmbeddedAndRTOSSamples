@@ -1,4 +1,4 @@
-ENTRY(reset_handler)
+ENTRY(reset_handler) /* OK to remove, seems no use */
 SECTIONS
 {
 	. = 0x10000; /* loading address */
