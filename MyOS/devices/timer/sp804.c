@@ -24,7 +24,7 @@ u32 timer_clearInterrupt(u32 n) // timer_start(0), 1, etc.
 
 void timer_handler(u32 n)
 {
-    u32 i;
+    //u32 i;
     TIMER *t = &timer[n];
     t->tick++; // Assume 20 ticks per second. Need to calculate it for more accuracy.
     if (t->tick == 20)

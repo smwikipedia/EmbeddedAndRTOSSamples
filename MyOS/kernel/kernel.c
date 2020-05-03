@@ -33,11 +33,13 @@ void main()
     kprintf("0x%x\n", 0xABCD);
     kprintf("0x%x\n", -0xCDEF);
 
-    TIMER timer[4];
-    for (u32 i = 0; i < 1; i++)
-    { // start all 4 timers
-        timer_start(i);
-    }
+    // for (u32 i = 0; i < 1; i++)
+    // { // start all 4 timers
+    //     timer_start(i);
+    // }
+
+    timer_start(2);
+    timer_start(3);
 
     while (1)
     {
@@ -93,14 +95,14 @@ void IRQ_handler()
 
     // VIC status BITs: timer0,1=4, uart0=13, uart1=14
     if (vicstatus & TIMER01_IRQ_VIC_BIT)
-    {                                       // bit4=1:timer0,1
+    {// bit4=1:timer0,1, handle timer 0 and 1 one by one
         if (*(timer[0].base + TVALUE) == 0) // timer 0
             timer_handler(0);
         if (*(timer[1].base + TVALUE) == 0) // timer 1
             timer_handler(1);
     }
     if (vicstatus & TIMER23_IRQ_VIC_BIT)
-    {                                       // bit5=1:timer2,3
+    {// bit5=1:timer2,3, handle timer 2 and 3 one by one
         if (*(timer[2].base + TVALUE) == 0) // timer 2
             timer_handler(2);
         if (*(timer[3].base + TVALUE) == 0) // timer 3

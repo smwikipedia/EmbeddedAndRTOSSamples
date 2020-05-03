@@ -77,7 +77,7 @@ void timer_init()
     int i;
     TIMER *tp;
     kprintf("timer_init()\n");
-    for (i = 0; i < 1; i++)
+    for (i = 0; i < 4; i++)
     {
         tp = &timer[i];
         if (i == 0)
@@ -94,8 +94,8 @@ void timer_init()
         *(tp->base + TMIS) = 0x0;
         *(tp->base + TLOAD) = 0x100;
         // CntlReg=1110-0110=|En=1|Periodic=1|IntE=1|Rsvd=0|scal=01|1=32bit|0=wrap|=0xE6
-        *(tp->base + TCNTL) = 0xE6;
-        *(tp->base + TBGLOAD) = 0x1C00;          // timer counter value
+        *(tp->base + TCNTL) = 0x66; // Bit 7 is started in timer_start() to enable the timer module, so the bit 7 should be set to 0 here.
+        *(tp->base + TBGLOAD) = 0x1C00; // timer counter value
         tp->tick = tp->hh = tp->mm = tp->ss = 0; // initialize wall clock
         strcpy((u8 *)tp->clock, "00:00:00");
     }
