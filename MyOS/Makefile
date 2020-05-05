@@ -25,7 +25,8 @@ INCLUDES = \
     -I $(DEVICE_DIR)/lcd \
     -I $(DEVICE_DIR)/uart \
     -I $(DEVICE_DIR)/vic \
-	-I $(DEVICE_DIR)/timer
+	-I $(DEVICE_DIR)/timer \
+	-I $(DEVICE_DIR)/kbd
 
 LIBS = libs/libgcc.a
 AS_FLAGS = -mcpu=arm926ej-s
@@ -46,6 +47,9 @@ OBJ_TIMER = $(BUILD_DIR)/timer.o
 $(OBJ_TIMER) : $(DEVICE_DIR)/timer/sp804.c $(DEVICE_DIR)/timer/sp804.h
 	$(GCC) $(GCC_FLAGS) $(DEVICE_DIR)/timer/sp804.c -o $(OBJ_TIMER)
 
+OBJ_KBD = $(BUILD_DIR)/kbd.o
+$(OBJ_KBD) : $(DEVICE_DIR)/kbd/pl050.c $(DEVICE_DIR)/kbd/pl050.h
+	$(GCC) $(GCC_FLAGS) $(DEVICE_DIR)/kbd/pl050.c -o $(OBJ_KBD)
 
 OBJ_FONT = \
 	$(BUILD_DIR)/$(FONT_NAME).S.o \
@@ -83,8 +87,8 @@ CLEAN :
 	$(RMDIR) $(BUILD_DIR)
 	$(MKDIR) $(BUILD_DIR)
 
-MYOS: $(OBJ_RESET) $(OBJ_BOARD) $(OBJ_UART) $(OBJ_TIMER) $(OBJ_FONT) $(OBJ_KERNEL) $(OBJ_BMP)
-	$(LD) $(OBJ_RESET) $(OBJ_BOARD) $(OBJ_UART) $(OBJ_TIMER) $(OBJ_FONT) $(OBJ_KERNEL) $(OBJ_BMP) $(WORKSPACE)/$(LIBS) $(LD_FLAGS) -o $(BUILD_DIR)/myos.elf
+MYOS: $(OBJ_RESET) $(OBJ_BOARD) $(OBJ_UART) $(OBJ_TIMER) $(OBJ_KBD) $(OBJ_FONT) $(OBJ_KERNEL) $(OBJ_BMP)
+	$(LD) $(OBJ_RESET) $(OBJ_BOARD) $(OBJ_UART) $(OBJ_TIMER) $(OBJ_KBD) $(OBJ_FONT) $(OBJ_KERNEL) $(OBJ_BMP) $(WORKSPACE)/$(LIBS) $(LD_FLAGS) -o $(BUILD_DIR)/myos.elf
 	$(OBJCOPY) $(OBJCOPY_FLAGS) $(BUILD_DIR)/myos.elf $(BUILD_DIR)/myos.bin
 
 QEMU_CMD = qemu-system-arm -s -M versatilepb -cpu arm926 -serial telnet:127.0.0.1:1122,server -kernel

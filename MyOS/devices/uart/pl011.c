@@ -11,8 +11,8 @@ void do_rx(UART *up)
     c = *(up->base + UDR);
     up->inbuf[up->inhead++] = c;
     up->inhead %= SBUFSIZE; //circular buffer
-    up->indata++; // a newly received char is buffered
-    up->inroom--; // a newly received char is buffered
+    up->indata++;           // a newly received char is buffered
+    up->inroom--;           // a newly received char is buffered
 
     /*
     This function doesn't do the echo back.
@@ -29,14 +29,14 @@ void do_tx(UART *up)
     /*
     The up->txon will only return to 0 when the up->outbuf is empty.
     */
-    if(up->outdata <= 0)
+    if (up->outdata <= 0)
     {
         /*
-        Clear the MIS[TX] by disable IMSC[TX] interrupt.
+        Clear the MIS[TX] by clearing IMSC[TX] bit
         Otherwise, the MIS[TX] will never disappear and the execution will dead loop in the IRQ handling.
         It can also be viewed as some kind of acknoledgement of the single-char trasmission completion.        
         */
-        *(up->base + IMSC) = RX_BIT;
+        *(up->base + IMSC) = *(up->base + IMSC) & (~TX_BIT);
         up->txon = 0; // turn off txon flag
         return;
     }
@@ -71,17 +71,18 @@ void do_tx(UART *up)
 void uart_handler(UART *up)
 {
     u8 mis = *(up->base + MIS); //read MIS register
-    if(mis & RX_BIT)
+    if (mis & RX_BIT)
     {
         do_rx(up);
     }
-    else if(mis & TX_BIT)
+    else if (mis & TX_BIT)
     {
         do_tx(up);
     }
     else
     {
-        while(1); // dead loop, something unexpected happened.
+        while (1)
+            ; // dead loop, something unexpected happened.
     }
 }
 
@@ -92,9 +93,10 @@ This function just consume chars fro mthe up->inbuf[].
 u8 ugetc(UART *up)
 {
     u8 c;
-    while(up->indata <=0); // no data in buffer, just block!
+    while (up->indata <= 0)
+        ; // no data in buffer, just block!
     c = up->inbuf[up->intail];
-   
+
     /*
     When updating the control variables in the upper-half of an interrupt-based device driver,
     we must ensure all the updating actions to the control variables are finished atomically.
@@ -138,20 +140,21 @@ void uputc(UART *up, u8 c)
     It's just a software buffer to tolerate some potential hardware delays.
     The buffer is the lubricant between software and hardware.
     */
-    if(up->txon)
+    if (up->txon)
     {
         up->outbuf[up->outhead] = c;
         lock();
         up->outhead++;
-        up->outhead %= SBUFSIZE;        
+        up->outhead %= SBUFSIZE;
         up->outdata++; // a new char is buffered
         up->outroom--; // a new char is buffered
         unlock();
         return;
     }
     //u32 i = *(up->base + UFR); // why do this?
-    while(*(up->base + UFR) & TXFF);// if the tx holding register is full, busy wait
-    
+    while (*(up->base + UFR) & TXFF)
+        ; // if the tx holding register is full, busy wait
+
     /*
     The action sequence is:
     Step 1. Update this program's knowledge about the UART state by setting the up->txon=1 to indicate that UART is busy trasmitting. 
@@ -167,8 +170,8 @@ void uputc(UART *up, u8 c)
     interrupt
 
     */
-    up->txon = 1;// this line should precede the next line to ensure up-txon correctly reflect the status of TX interrupt.
-    
+    up->txon = 1; // this line should precede the next line to ensure up-txon correctly reflect the status of TX interrupt.
+
     *(up->base + IMSC) |= (RX_BIT | TX_BIT);
 
     /*
@@ -182,19 +185,18 @@ void uputc(UART *up, u8 c)
     We just rely on the hardware...
     */
     *(up->base + UDR) = (u32)c;
-
 }
 
 void ugets(UART *up, char *s)
 {
-    while((*s = ugetc(up))!= '\r')
+    while ((*s = ugetc(up)) != '\r')
     {
         uputc(up, *s); // echo back as user is typing so user can see what he has just input.
         s++;
     }
 
     uputc(up, '\n'); //echo to a new line, otherwise, the line just echoed will be overwritten.
-    uputc(up, '\r'); 
+    uputc(up, '\r');
 
     *s++ = '\n'; // add line break to the newly collected line.
     *s++ = '\r';
@@ -203,9 +205,123 @@ void ugets(UART *up, char *s)
 
 void uprints(UART *up, u8 *s)
 {
-    while(*s)
+    while (*s)
     {
         uputc(up, *s++);
     }
 }
 
+u8 *uart_tab = "0123456789ABCDEF";
+void urpx(UART *up, u32 x)
+{
+    if (x == 0)
+    {
+        return;
+    }
+
+    u8 c = '0';
+    if (x > 0)
+    {
+        c = uart_tab[x % 16];
+        urpx(up, x / 16);
+    }
+    uputc(up, c);
+}
+
+void uprintx(UART *up, i32 x)
+{
+    if (x == 0)
+    {
+        uputc(up, '0');
+        return;
+    }
+
+    if (x < 0)
+    {
+        uputc(up, '-');
+        x = -x;
+    }
+
+    urpx(up, x);
+}
+
+void urpu(UART *up, u32 x)
+{
+    if (x == 0)
+    {
+        return;
+    }
+    u8 c = '0';
+    if (x > 0)
+    {
+        c = uart_tab[x % 10];
+        urpu(up, x / 10);
+    }
+    uputc(up, c);
+}
+
+void uprintu(UART *up, u32 x)
+{
+    if (x == 0)
+    {
+        uputc(up, '0');
+    }
+    else
+    {
+        urpu(up, x);
+    }
+}
+
+void uprinti(UART *up, i32 x)
+{
+    if (x < 0)
+    {
+        uputc(up, '-');
+        x = -x;
+    }
+
+    uprintu(up, x);
+}
+
+void uprintf(UART *up, u8 *fmt, ...)
+{
+    u32 *ip;
+    u8 *cp;
+    cp = fmt;
+    ip = (u32 *)((u32)&fmt + sizeof(u8 *)); //(u32*)&fmt + 1;
+
+    while (*cp)
+    {
+        if (*cp != '%')
+        {
+            uputc(up, *cp);
+            if (*cp == '\n')
+            {
+                uputc(up, '\r');
+            }
+            cp++;
+            continue;
+        }
+        cp++;
+        switch (*cp)
+        {
+        case 'c':
+            uputc(up, (u8)*ip);
+            break;
+        case 's':
+            uprints(up, (u8 *)*ip);
+            break;
+        case 'd':
+            uprinti(up, *ip);
+            break;
+        case 'u':
+            uprintu(up, *ip);
+            break;
+        case 'x':
+            uprintx(up, *ip);
+            break;
+        }
+        cp++;
+        ip++;
+    }
+}

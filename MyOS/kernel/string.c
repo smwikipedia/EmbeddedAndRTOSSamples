@@ -19,3 +19,10 @@ u8* strcpy(u8 *s1, u8 *s2)
     *s1 = '\0';
     return s1;
 }
+
+u32 strlen(const u8 *s)
+{
+    u32 i = 0;
+    while (*s++ != '\0') i++;
+    return i;
+}

@@ -60,5 +60,6 @@ void uart_init();
 void uart_handler(UART *up);
 void uprints(UART *up, u8 *s);
 void ugets(UART *up, char *s);
+void uprintf(UART *up, u8* fmt, ...);
 
 #endif

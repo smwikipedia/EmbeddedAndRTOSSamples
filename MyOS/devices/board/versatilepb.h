@@ -5,6 +5,7 @@
 #include "pl011.h"
 #include "pl110.h"
 #include "sp804.h"
+#include "pl050.h"
 #include "display.h"
 
 
@@ -22,11 +23,17 @@ extern UART uart[4];
 VIC for versatilepb 
 */
 //check the versatilepb and pl190 specs
-#define PICIRQSTATUS_ADDR 0x10140000 // IRQ status register
-#define PICINTENABLE_ADDR 0x10140010 // Interrupt enable register
+#define PICIRQSTATUS_ADDR 0x10140000 // Primary Interrupt Controller (PIC) status regiseter
+#define PICINTENABLE_ADDR 0x10140010 // PIC interrupt enable register
+
+#define SICIRQSTATUS_ADDR 0x10003000 // Secondary Interrupt Controller (SIC) status regiseter
+#define SICINTENABLE_ADDR 0x10003008 // SIC interrupt enable register
 
 #define VIC_STATUS (*(u32*)PICIRQSTATUS_ADDR)
 #define VIC_INTENABLE (*(u32*)PICINTENABLE_ADDR)
+
+#define SIC_STATUS (*(u32*)SICIRQSTATUS_ADDR)
+#define SIC_INTENABLE (*(u32*)SICINTENABLE_ADDR)
 
 //check the versatilepb spec for interrupt source bits arrangement
 #define UART0_IRQ_VIC_BIT (1<<12)
@@ -36,5 +43,11 @@ VIC for versatilepb
 #define TIMER01_IRQ_VIC_BIT (1<<4)
 #define TIMER23_IRQ_VIC_BIT (1<<5)
 extern volatile TIMER timer[4]; //4 timers; 2 per unit; at 0x00 and 0x20
+
+//KBD
+#define SIC_IRQ_VIC_BIT (1<<31)
+#define KMI0_IRQ_SIC_BIT (1<<3)
+#define KMI1_IRQ_SIC_BIT (1<<4)
+
 
 #endif

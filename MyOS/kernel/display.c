@@ -152,6 +152,7 @@ void kputc(u8 c)
         else
         {
             gDisplayContext.cursor_row++;
+            gDisplayContext.cursor_col = 1;
         }
         //gDisplayContext.cursor_col = 1; // '\n' shouldn't do this. this should be done by '\r'
         putcursor(gDisplayContext.cursor);
@@ -315,6 +316,10 @@ void kprintf(u8* fmt, ...)
         {
             case 'c':
                 kputc((u8)*ip);
+                if((u8)*ip == '\n')
+                {
+                    kputc('\r');
+                }                
                 break;
             case 's':
                 kprints((u8*)*ip);

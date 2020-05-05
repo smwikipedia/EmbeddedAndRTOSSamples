@@ -10,7 +10,8 @@
                 "${workspaceFolder}/devices/lcd",
                 "${workspaceFolder}/devices/uart",
                 "${workspaceFolder}/devices/vic",
-                "${workspaceFolder}/devices/timer"
+                "${workspaceFolder}/devices/timer",
+                "${workspaceFolder}/devices/kbd"
             ],
             "defines": [
                 "_DEBUG",
