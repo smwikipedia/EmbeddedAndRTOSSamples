@@ -108,6 +108,7 @@ void kbd_handler() // KBD interrupt handler in C
     kp->room--; // update counters
 
     kprintf("%c[head:%d, tail:%d, data:%d,  room:%d]\n", c, kp->head, kp->tail, kp->data, kp->room); // echo to LCD
+    uprintf(up, "%c[head:%d, tail:%d, data:%d,  room:%d]\n", c, kp->head, kp->tail, kp->data, kp->room); // echo to UART
     //kprintf("%c", c); // echo to LCD
 }
 
@@ -148,6 +149,8 @@ u32 kgets(u8 s[]) // get a string from KBD
     {
         *s++ = c;
     }
+    *s = '\n';
+    s++;
     *s = 0;
     return strlen(s);
 }

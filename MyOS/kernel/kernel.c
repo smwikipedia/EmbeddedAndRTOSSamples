@@ -56,6 +56,7 @@ void main()
     {
         kprintf("Enter a line from KBD:\n");
         kgets(line);
+        uprintf(up, line);
         kprintf("Keyboard input: %s\n", line);
         // uprints(up, "[Input something through UART and then press Enter echo them back through UART:]\n\r");
         // ugets(up, line);
