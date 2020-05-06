@@ -47,16 +47,16 @@ void main()
     kprintf("0x%x\n", 0xABCD);
     kprintf("0x%x\n", -0xCDEF);
 
-    for (u32 i = 0; i < 4; i++)
-    { // start all 4 timers
-        timer_start(i);
-    }
+    // for (u32 i = 0; i < 4; i++)
+    // { // start all 4 timers
+    //     timer_start(i);
+    // }
 
     while (1)
     {
-        // kprintf("Enter a line from KBD:\n");
-        // kgets(line);
-        // kprintf("Keyboard input: %s\n", line);
+        kprintf("Enter a line from KBD:\n");
+        kgets(line);
+        kprintf("Keyboard input: %s\n", line);
         // uprints(up, "[Input something through UART and then press Enter echo them back through UART:]\n\r");
         // ugets(up, line);
         // uprints(up, "[And you have entered below line from UART:]\n\r");

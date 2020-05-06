@@ -26,7 +26,11 @@ void do_rx(UART *up)
 }
 
 /*
-
+According to the PL011 spec:
+If the FIFOs are disabled (have a depth of one location) and there is no data
+present in the transmitters single location, the transmit interrupt is asserted HIGH.
+It is cleared by performing a single write to the transmit FIFO, or by clearing the
+interrupt.
 */
 void do_tx(UART *up)
 {
@@ -64,9 +68,12 @@ void do_tx(UART *up)
     up->outtail %= SBUFSIZE;
 
     /*
-    Write c to output data register, this will also clear the TX IRQ signal for this time according to the UART PL011 spec.
+    Write c to output data register, it will also clear the TX IRQ signal for this time according to the UART PL011 spec.
     After the new c get transmitted, a new TX IRQ will be rasised.
-    So below code is definitely necessary for robustness.
+    And the new TX IRQ will trigger this do_tx() function *again*.
+    Each triggering of the do_tx() function will get a char from the up->outbuf[] until the up->outdata reaches 0.
+    Kind of like self-relaying.
+    I just give it a first move by uputc(), then the UART just keeps running by itself unitl no data to transmit.
     */
     *(up->base + UDR) = (u32)c;
     up->outdata--; // a buffered char is transmitted
