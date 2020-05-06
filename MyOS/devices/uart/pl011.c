@@ -9,8 +9,13 @@ void do_rx(UART *up)
 {
     char c;
     c = *(up->base + UDR);
+    if(up->inroom == 0)
+    {
+        return;
+    }
+
     up->inbuf[up->inhead++] = c;
-    up->inhead %= SBUFSIZE; //circular buffer
+    up->inhead %= SBUFSIZE; //circular buffer    
     up->indata++;           // a newly received char is buffered
     up->inroom--;           // a newly received char is buffered
 

@@ -8,7 +8,7 @@
 #define KCLK 0x0C  // clock divisor register; (not used)
 #define KISTA 0x10 // interrupt status register;(not used)
 
-#define MAX_KBD_CHAR_BUFFER_SIZE 128
+#define MAX_KBD_CHAR_BUFFER_SIZE 5
 
 typedef volatile struct kbd
 {                               // base = 0x10006000
@@ -21,6 +21,6 @@ extern volatile KBD kbd; // KBD data structure
 
 void kbd_init();
 void kbd_handler();
-int kgets(char s[]);
+u32 kgets(u8 s[]);
 
 #endif

@@ -25,7 +25,7 @@ boolean key_release = FALSE;
 u8 PC_AT_VISABLE_CHARMAP_UNSHIFT[MAX_SCANCODE_NUM] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '`', 0,
     0, 0, 0, 0, 0, 'q', '1', 0, 0, 0, 'z', 's', 'a', 'w', '2', 0,
-    0, 'c', 'x', 'd', 'e', '4', '3', 0, 0, 0, 'v', 'f', 't', 'r', '5', 0,
+    0, 'c', 'x', 'd', 'e', '4', '3', 0, 0, ' ', 'v', 'f', 't', 'r', '5', 0,
     0, 'n', 'b', 'h', 'g', 'y', '6', 0, 0, 0, 'm', 'j', 'u', '7', '8', 0,
     0, ',', 'k', 'i', 'o', '0', '9', 0, 0, '.', '/', 'l', ';', 'p', '-', 0,
     0, 0, '\'', 0, '[', '=', 0, 0, 0, 0, 0, ']', 0, '\\', 0, 0,
@@ -35,7 +35,7 @@ u8 PC_AT_VISABLE_CHARMAP_UNSHIFT[MAX_SCANCODE_NUM] = {
 u8 PC_AT_VISABLE_CHARMAP_SHIFT[MAX_SCANCODE_NUM] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '`', 0,
     0, 0, 0, 0, 0, 'Q', '!', 0, 0, 0, 'Z', 'S', 'A', 'W', '@', 0,
-    0, 'C', 'X', 'D', 'E', '$', '#', 0, 0, 0, 'V', 'F', 'T', 'R', '%', 0,
+    0, 'C', 'X', 'D', 'E', '$', '#', 0, 0, ' ', 'V', 'F', 'T', 'R', '%', 0,
     0, 'N', 'B', 'H', 'G', 'Y', '^', 0, 0, 0, 'M', 'J', 'U', '&', '*', 0,
     0, '<', 'K', 'I', 'O', ')', '(', 0, 0, '>', '?', 'L', ':', 'P', '_', 0,
     0, 0, '"', 0, '{', '+', 0, 0, 0, 0, 0, '}', 0, '|', 0, 0,
@@ -45,7 +45,7 @@ u8 PC_AT_VISABLE_CHARMAP_SHIFT[MAX_SCANCODE_NUM] = {
 void kbd_init()
 {
     KBD *kp = &kbd;
-    kp->base = (char *)0x10006000;
+    kp->base = (u8 *)0x10006000;
     *(kp->base + KCNTL) = 0x14; // 00010100=INTenable, Enable
     *(kp->base + KCLK) = 8;     // PL051 manual says a value 0 to 15
     kp->data = 0;
@@ -61,6 +61,7 @@ void kbd_handler() // KBD interrupt handler in C
     //color = RED;                 // int color in vid.c file
     scode = *(kp->base + KDATA); // read scan code in data register
 
+    // below 2 lines are used to get the scancode of the keyboard.
     //kprintf("kbd interrupt: scode = %d\n", scode);
     //return;
 
@@ -95,12 +96,19 @@ void kbd_handler() // KBD interrupt handler in C
         u8 *charmap = shift_on ? PC_AT_VISABLE_CHARMAP_SHIFT : PC_AT_VISABLE_CHARMAP_UNSHIFT;
         c = charmap[scode];
     }
+
+    if(kp->room == 0)
+    {
+        return;
+    }
     
-    kp->buf[kp->head++] = c; // enter key into CIRCULAR buf[ ]
-    kp->head %= 128;
+    kp->buf[kp->head++] = c; // enter key into CIRCULAR buf[]
+    kp->head %= MAX_KBD_CHAR_BUFFER_SIZE;
     kp->data++;
     kp->room--; // update counters
-    kprintf("%c", c); // echo to LCD
+
+    kprintf("%c[head:%d, tail:%d, data:%d,  room:%d]\n", c, kp->head, kp->tail, kp->data, kp->room); // echo to LCD
+    //kprintf("%c", c); // echo to LCD
 }
 
 /*
@@ -111,24 +119,29 @@ But the kbd_handler() doesn't need to call the lock/unlock methods because it ca
 which means it is the only one who manipulates the control variables.
 
 In short, the contention for control variables only exists for the upper-half, not the lower-half.
+
+
+The kgets() and kgetc() just keep *chasing* the input buffer from current tail position.
+The 
+
 */
-int kgetc() // main program calls kgetc() to return a char
+u8 kgetc() // main program calls kgetc() to return a char
 {
     u8 c;
     KBD *kp = &kbd;
-    unlock(); // enable IRQ interrupts
+    //unlock(); // enable IRQ interrupts
     while (kp->data <= 0)
         ;                    // wait for data; READONLY
     lock();                  // disable IRQ interrupts
     c = kp->buf[kp->tail++]; // get a c and update tail index
-    kp->tail %= 128;
+    kp->tail %= MAX_KBD_CHAR_BUFFER_SIZE;
     kp->data--;
     kp->room++; // update with interrupts OFF
     unlock();   // enable IRQ interrupts
     return c;
 }
 
-int kgets(char s[]) // get a string from KBD
+u32 kgets(u8 s[]) // get a string from KBD
 {
     u8 c;
     while ((c = kgetc()) != '\n')

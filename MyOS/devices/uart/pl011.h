@@ -23,7 +23,7 @@
 #define TX_BIT (1<<5) // TX interrupt mask bit in IMSC register, also TX interrupt status bit in MIS register.
 
 //string buffer size
-#define SBUFSIZE 128
+#define SBUFSIZE 5
 
 /*
 
