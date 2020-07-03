@@ -1,93 +1,59 @@
+#include "types.h"
 #include "versatilepb.h"
-#include "pl011.h"
 #include "string.h"
+#include "display.h"
 
-/*
-UART init
-*/
-UART uart[4]; // 4 UART structures
+
+#include "pl011.h"
+#include "pl110.h"
+#include "sp804.h"
+#include "pl050.h"
+
+volatile UART uart[MAX_UART_NUMBER]; // 4 UART structures
+volatile TIMER timer[MAX_TIMER_NUMBER]; //4 timers; 2 per unit; at 0x00 and 0x20
+volatile KBD kbd; // KBD data structure
+
 void uart_init()
 {
-    u32 i;
-    UART *up;
-    for(i=0; i<4; i++){
-        up = &uart[i];
+    for(u32 i=0; i<MAX_UART_NUMBER; i++)
+    {
+        UART *up = &uart[i];
         if(i != 3)
         {// uart 0 ~ 2 are adjacent
-            up->base = (char *)(ARM_VERSATILE_PL011_UART0 + i * 0x1000); 
+            uart_init_single(up, VERSATILEPB_PL011_UART0 + i * 0x1000);
         }
         else
         {// uart 3 is different
-            up->base = (char *)(ARM_VERSATILE_PL011_UART3);                   
-        }        
-        *(up->base + CNTL) &= ~0x10; // disable UART FIFO
-        *(up->base + IMSC) |= (RX_BIT | TX_BIT);  // enable TX and RX interrupts for UART
-        up->n = i; //UART ID
-        up->indata = up->inhead = up->intail = 0;
-        up->inroom = SBUFSIZE;
-        up->outdata = up->outhead = up->outtail = 0;
-        up->outroom = SBUFSIZE;
-        up->txon = 0;
+            uart_init_single(up, VERSATILEPB_PL011_UART3);
+        }          
+
     }
 }
-
-/*
-LCD frame buffer init
-*/
-u32 fbuf_init()
-{
-    fb = (u32 *)(0x200000); //frame buffer starts at 2M, decided by the board spec
-
-    InitializeFontContext12x16();
-
-    /* for 640x480 VGA */
-    // *(volatile u32 *)(0x1000001c) = 0x00002C77;
-    // *(volatile u32 *)(0x10120000) = 0x3F1F3F9C;
-    // *(volatile u32 *)(0x10120004) = 0x090B61DF;
-    // *(volatile u32 *)(0x10120008) = 0x067F1800;
-    // gDisplayContext.screen_width = 640;
-    // gDisplayContext.screen_height = 480;
-
-    /* for 800x600 SVGA */
-    *(volatile u32 *)(0x1000001c) = 0x00002CAC;
-    *(volatile u32 *)(0x10120000) = 0x1313A4C4;
-    *(volatile u32 *)(0x10120004) = 0x0505F6F7;
-    *(volatile u32 *)(0x10120008) = 0x071F1800;
-    gDisplayContext.screen_width = 800;
-    gDisplayContext.screen_height = 600;
-
-
-    gDisplayContext.cursor_row = 1;
-    gDisplayContext.cursor_col = 1;
-    gDisplayContext.max_col = gDisplayContext.screen_width / (gDisplayContext.font_display_width + gDisplayContext.h_font_space);
-    gDisplayContext.max_row = gDisplayContext.screen_height / (gDisplayContext.font_display_height + gDisplayContext.v_font_space);
-    gDisplayContext.cursor = '_';
-
-    *(volatile u32 *)(0x10120010) = 0x200000; //fbuf
-    *(volatile u32 *)(0x10120018) = 0x82B;
-}
-
-/*
-4 SP804 timers
-*/
-volatile TIMER timer[4]; //4 timers; 2 per unit; at 0x00 and 0x20
 
 void timer_init()
 {
     int i;
     TIMER *tp;
     kprintf("timer_init()\n");
-    for (i = 0; i < 4; i++)
+    for (i = 0; i < MAX_TIMER_NUMBER; i++)
     {
         tp = &timer[i];
-        if (i == 0)
-            tp->base = (u32 *)0x101E2000;
-        if (i == 1)
-            tp->base = (u32 *)0x101E2020;
-        if (i == 2)
-            tp->base = (u32 *)0x101E3000;
-        if (i == 3)
-            tp->base = (u32 *)0x101E3020;
+        switch(i)
+        {
+            case 0:
+                timer_init_single(tp, VERSATILEPB_SP804_TIMER0);
+                break;
+            case 1:
+                timer_init_single(tp, VERSATILEPB_SP804_TIMER1);
+                break;
+            case 2:
+                timer_init_single(tp, VERSATILEPB_SP804_TIMER2);
+                break;
+            case 3:
+                timer_init_single(tp, VERSATILEPB_SP804_TIMER3);
+                break;
+        }
+
         *(tp->base + TLOAD) = 0x0; // reset
         *(tp->base + TVALUE) = 0xFFFFFFFF;
         *(tp->base + TRIS) = 0x0;
@@ -100,3 +66,16 @@ void timer_init()
         strcpy((u8 *)tp->clock, "00:00:00");
     }
 }
+
+
+void board_init()
+{
+    uart_init();
+    fbuf_init(VERSATILEPB_PL110_LCD_BASE, VERSATILEPB_OSC1);
+    timer_init();
+    kbd_init(&kbd, VERSATILEPB_PL050_KBD);
+
+}
+
+
+

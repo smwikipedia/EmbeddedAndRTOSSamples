@@ -1,7 +1,63 @@
 #include "display.h"
 #include "string.h"
 #include "sp804.h"
-#include "versatilepb.h"
+
+
+
+void timer_init_single(TIMER *tp, u32 base)
+{
+    int i;
+    //kprintf("timer_init_single()\n");
+    tp->base = (u32 *)base;
+    *(tp->base + TLOAD) = 0x0; // reset
+    *(tp->base + TVALUE) = 0xFFFFFFFF;
+    *(tp->base + TRIS) = 0x0;
+    *(tp->base + TMIS) = 0x0;
+    *(tp->base + TLOAD) = 0x100;
+    // CntlReg=1110-0110=|En=1|Periodic=1|IntE=1|Rsvd=0|scal=01|1=32bit|0=wrap|=0xE6
+    *(tp->base + TCNTL) = 0x66; // Bit 7 is started in timer_start() to enable the timer module, so the bit 7 should be set to 0 here.
+    *(tp->base + TBGLOAD) = 0x1C00; // timer counter value
+    tp->tick = tp->hh = tp->mm = tp->ss = 0; // initialize wall clock
+    strcpy((u8 *)tp->clock, "00:00:00");    
+}
+
+// void timer_init()
+// {
+//     int i;
+//     TIMER *tp;
+//     kprintf("timer_init()\n");
+//     for (i = 0; i < 4; i++)
+//     {
+//         tp = &timer[i];
+//         switch(i)
+//         {
+//             case 0:
+//                 tp->base = (u32 *)VERSATILEPB_SP804_TIMER0;
+//                 break;
+//             case 1:
+//                 tp->base = (u32 *)VERSATILEPB_SP804_TIMER1;
+//                 break;
+//             case 2:
+//                 tp->base = (u32 *)VERSATILEPB_SP804_TIMER2;
+//                 break;
+//             case 3:
+//                 tp->base = (u32 *)VERSATILEPB_SP804_TIMER3;
+//                 break;
+//         }
+
+//         *(tp->base + TLOAD) = 0x0; // reset
+//         *(tp->base + TVALUE) = 0xFFFFFFFF;
+//         *(tp->base + TRIS) = 0x0;
+//         *(tp->base + TMIS) = 0x0;
+//         *(tp->base + TLOAD) = 0x100;
+//         // CntlReg=1110-0110=|En=1|Periodic=1|IntE=1|Rsvd=0|scal=01|1=32bit|0=wrap|=0xE6
+//         *(tp->base + TCNTL) = 0x66; // Bit 7 is started in timer_start() to enable the timer module, so the bit 7 should be set to 0 here.
+//         *(tp->base + TBGLOAD) = 0x1C00; // timer counter value
+//         tp->tick = tp->hh = tp->mm = tp->ss = 0; // initialize wall clock
+//         strcpy((u8 *)tp->clock, "00:00:00");
+//     }
+// }
+
 
 void timer_start(u32 n) // timer_start(0), 1, etc.
 {

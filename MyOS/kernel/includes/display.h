@@ -44,7 +44,6 @@ Note that the file suffix will also be part of the exported symbol name.
 */
 extern char _binary___resource_images_image_bmp_start;
 
-u32 fbuf_init();
 void show_bmp(u8 *p, u32 start_row, u32 start_col);
 
 void clrpix(u32 x, u32 y);

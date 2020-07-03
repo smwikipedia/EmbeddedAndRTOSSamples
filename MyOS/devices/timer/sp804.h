@@ -2,6 +2,7 @@
 #define UART_H
 
 #include "types.h"
+#include "versatilepb.h"
 
 #define TLOAD 0x0
 #define TVALUE 0x1
@@ -20,7 +21,9 @@ typedef volatile struct timer
 
 void timer_start(u32 n);
 void timer_handler(u32 n);
-void timer_init();
+//void timer_init();
+void timer_init_single(TIMER *tp, u32 base);
 
+extern volatile TIMER timer[MAX_TIMER_NUMBER];
 
 #endif

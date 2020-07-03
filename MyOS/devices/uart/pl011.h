@@ -1,7 +1,20 @@
 #ifndef PL011_UART_H
 #define PL011_UART_H
-
 #include "types.h"
+#include "versatilepb.h"
+
+
+/* 
+UART base addresses
+The purpose of below indirect macros is that, when porting to other boards,
+we may only need change these base addresses.
+*/
+// #define PL011_UART0_BASE VERSATILEPB_PL011_UART0
+// #define PL011_UART1_BASE VERSATILEPB_PL011_UART1
+// #define PL011_UART2_BASE VERSATILEPB_PL011_UART2
+// #define PL011_UART3_BASE VERSATILEPB_PL011_UART3
+
+
 
 //UART register offsets, check the PL110 spec
 #define UDR 0x00 // data 
@@ -26,7 +39,6 @@
 #define SBUFSIZE 5
 
 /*
-
 outdata: how many chars in outbuf to be transmitted
 outroom: how much room remaining in outbuf
 outhead: the latest char buffered
@@ -56,7 +68,11 @@ typedef volatile struct uart {
     volatile u32 txon;  // 1 = TX interrput is on, the UART is in transmitting state
 } UART;
 
-void uart_init();
+extern UART uart[MAX_UART_NUMBER];
+
+
+//void uart_init();
+void uart_init_single(UART *up, u32 uart_base);
 void uart_handler(UART *up);
 void uprints(UART *up, u8 *s);
 void ugets(UART *up, char *s);

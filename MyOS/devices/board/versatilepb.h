@@ -1,23 +1,17 @@
 #ifndef VERSATILEPB_H
 #define VERSATILEPB_H
 
-#include "pl190.h"
-#include "pl011.h"
-#include "pl110.h"
-#include "sp804.h"
-#include "pl050.h"
-#include "display.h"
-
-
 
 /*
-offsets of 4 UARTs on versatilepb board.
+Base addresses of 4 UARTs on versatilepb board.
 */
-#define ARM_VERSATILE_PL011_UART0 0x101F1000 // check the memory map in versatilepb spec
-#define ARM_VERSATILE_PL011_UART1 0x101F2000
-#define ARM_VERSATILE_PL011_UART2 0x101F3000
-#define ARM_VERSATILE_PL011_UART3 0x10009000 // slightly different from UART0/1/2
-extern UART uart[4];
+#define VERSATILEPB_PL011_UART0 0x101F1000 // check the memory map in versatilepb spec
+#define VERSATILEPB_PL011_UART1 0x101F2000
+#define VERSATILEPB_PL011_UART2 0x101F3000
+#define VERSATILEPB_PL011_UART3 0x10009000 // slightly different from UART0/1/2
+#define MAX_UART_NUMBER 4
+#define MAX_TIMER_NUMBER 4
+
 
 /*
 VIC for versatilepb 
@@ -40,14 +34,27 @@ VIC for versatilepb
 #define UART1_IRQ_VIC_BIT (1<<13)
 
 //timer
+#define VERSATILEPB_SP804_TIMER0 0x101E2000
+#define VERSATILEPB_SP804_TIMER1 0x101E2020
+#define VERSATILEPB_SP804_TIMER2 0x101E3000
+#define VERSATILEPB_SP804_TIMER3 0x101E3020
+
 #define TIMER01_IRQ_VIC_BIT (1<<4)
 #define TIMER23_IRQ_VIC_BIT (1<<5)
-extern volatile TIMER timer[4]; //4 timers; 2 per unit; at 0x00 and 0x20
+
 
 //KBD
+#define VERSATILEPB_PL050_KBD 0x10006000
 #define SIC_IRQ_VIC_BIT (1<<31)
 #define KMI0_IRQ_SIC_BIT (1<<3)
 #define KMI1_IRQ_SIC_BIT (1<<4)
 
+//LCD
+#define VERSATILEPB_OSC1 0x1000001c
+#define VERSATILEPB_PL110_LCD_BASE 0x10120000
+#define VERSATILEPB_PL110_LCD_TIME_REG0 0x10120000
+#define VERSATILEPB_PL110_LCD_TIME_REG1 0x10120004
+#define VERSATILEPB_PL110_LCD_TIME_REG2 0x10120008
 
+void board_init();
 #endif

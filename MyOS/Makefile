@@ -30,7 +30,7 @@ INCLUDES = \
 
 LIBS = libs/libgcc.a
 AS_FLAGS = -mcpu=arm926ej-s
-GCC_FLAGS = -mcpu=arm926ej-s -marm -g -c -nodefaultlibs -nostdlib -nostartfiles -fno-builtin -nostdinc $(INCLUDES) 
+GCC_FLAGS = -mcpu=arm926ej-s -marm -g -c -nodefaultlibs -nostdlib -nostartfiles -fno-builtin -nostdinc $(INCLUDES) -Werror
 LD_FLAGS = -T $(WORKSPACE)/myos.ld -nostdlib
 OBJCOPY_FLAGS = -O binary
 
@@ -50,6 +50,10 @@ $(OBJ_TIMER) : $(DEVICE_DIR)/timer/sp804.c $(DEVICE_DIR)/timer/sp804.h
 OBJ_KBD = $(BUILD_DIR)/kbd.o
 $(OBJ_KBD) : $(DEVICE_DIR)/kbd/pl050.c $(DEVICE_DIR)/kbd/pl050.h
 	$(GCC) $(GCC_FLAGS) $(DEVICE_DIR)/kbd/pl050.c -o $(OBJ_KBD)
+
+OBJ_LCD = $(BUILD_DIR)/lcd.o
+$(OBJ_LCD) : $(DEVICE_DIR)/lcd/pl110.c $(DEVICE_DIR)/lcd/pl110.h
+	$(GCC) $(GCC_FLAGS) $(DEVICE_DIR)/lcd/pl110.c -o $(OBJ_LCD)
 
 OBJ_FONT = \
 	$(BUILD_DIR)/$(FONT_NAME).S.o \
@@ -87,8 +91,8 @@ CLEAN :
 	$(RMDIR) $(BUILD_DIR)
 	$(MKDIR) $(BUILD_DIR)
 
-MYOS: $(OBJ_RESET) $(OBJ_BOARD) $(OBJ_UART) $(OBJ_TIMER) $(OBJ_KBD) $(OBJ_FONT) $(OBJ_KERNEL) $(OBJ_BMP)
-	$(LD) $(OBJ_RESET) $(OBJ_BOARD) $(OBJ_UART) $(OBJ_TIMER) $(OBJ_KBD) $(OBJ_FONT) $(OBJ_KERNEL) $(OBJ_BMP) $(WORKSPACE)/$(LIBS) $(LD_FLAGS) -o $(BUILD_DIR)/myos.elf
+MYOS: $(OBJ_RESET) $(OBJ_BOARD) $(OBJ_UART) $(OBJ_TIMER) $(OBJ_KBD) $(OBJ_LCD) $(OBJ_FONT) $(OBJ_KERNEL) $(OBJ_BMP)
+	$(LD) $(OBJ_RESET) $(OBJ_BOARD) $(OBJ_UART) $(OBJ_TIMER) $(OBJ_KBD) $(OBJ_LCD) $(OBJ_FONT) $(OBJ_KERNEL) $(OBJ_BMP) $(WORKSPACE)/$(LIBS) $(LD_FLAGS) -o $(BUILD_DIR)/myos.elf
 	$(OBJCOPY) $(OBJCOPY_FLAGS) $(BUILD_DIR)/myos.elf $(BUILD_DIR)/myos.bin
 
 KERNEL_BIN = $(BUILD_DIR)/myos.bin

@@ -1,7 +1,8 @@
+#include "types.h"
 #include "display.h"
 #include "string.h"
 #include "pl050.h"
-#include "pl011.h"
+//#include "pl011.h"
 #include "versatilepb.h"
 
 // defined in ts.S
@@ -9,8 +10,8 @@
 extern void lock();
 extern void unlock();
 
-volatile KBD kbd; // KBD data structure
-extern UART *up;
+//volatile KBD kbd; // KBD data structure
+//extern UART *up;
 
 //below scan codes are for PC-AT set 2. Ref: https://en.wikipedia.org/wiki/Scancode
 #define MAX_SCANCODE_NUM 128
@@ -42,16 +43,27 @@ u8 PC_AT_VISABLE_CHARMAP_SHIFT[MAX_SCANCODE_NUM] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-void kbd_init()
+
+void kbd_init(KBD *kp, u32 PL050_KBD_BASE)
 {
-    KBD *kp = &kbd;
-    kp->base = (u8 *)0x10006000;
+    kp->base = (u8 *)PL050_KBD_BASE;
     *(kp->base + KCNTL) = 0x14; // 00010100=INTenable, Enable
     *(kp->base + KCLK) = 8;     // PL051 manual says a value 0 to 15
     kp->data = 0;
     kp->room = MAX_KBD_CHAR_BUFFER_SIZE; // counters
     kp->head = kp->tail = 0;             // index to buffer
 }
+
+// void kbd_init()
+// {
+//     KBD *kp = &kbd;
+//     kp->base = (u8 *)PL050_KBD_BASE;
+//     *(kp->base + KCNTL) = 0x14; // 00010100=INTenable, Enable
+//     *(kp->base + KCLK) = 8;     // PL051 manual says a value 0 to 15
+//     kp->data = 0;
+//     kp->room = MAX_KBD_CHAR_BUFFER_SIZE; // counters
+//     kp->head = kp->tail = 0;             // index to buffer
+// }
 
 void kbd_handler() // KBD interrupt handler in C
 {
@@ -108,7 +120,7 @@ void kbd_handler() // KBD interrupt handler in C
     kp->room--; // update counters
 
     kprintf("%c[head:%d, tail:%d, data:%d,  room:%d]\n", c, kp->head, kp->tail, kp->data, kp->room); // echo to LCD
-    uprintf(up, "%c[head:%d, tail:%d, data:%d,  room:%d]\n", c, kp->head, kp->tail, kp->data, kp->room); // echo to UART
+    //uprintf(up, "%c[head:%d, tail:%d, data:%d,  room:%d]\n", c, kp->head, kp->tail, kp->data, kp->room); // echo to UART
     //kprintf("%c", c); // echo to LCD
 }
 

@@ -5,6 +5,52 @@
 extern void lock();
 extern void unlock();
 
+
+
+/*
+Initialize a single UART.
+*/
+void uart_init_single(UART *up, u32 uart_base)
+{
+    u32 i;
+    up->base = (u8*)uart_base;
+    *(up->base + CNTL) &= ~0x10; // disable UART FIFO
+    *(up->base + IMSC) |= (RX_BIT | TX_BIT);  // enable TX and RX interrupts for UART
+    up->n = i; //UART ID
+    up->indata = up->inhead = up->intail = 0;
+    up->inroom = SBUFSIZE;
+    up->outdata = up->outhead = up->outtail = 0;
+    up->outroom = SBUFSIZE;
+    up->txon = 0;    
+}
+
+
+// void uart_init()
+// {
+//     u32 i;
+//     UART *up;
+//     for(i=0; i<MAX_UART_NUMBER; i++){
+//         up = &uart[i];
+//         if(i != 3)
+//         {// uart 0 ~ 2 are adjacent
+//             up->base = (char *)(PL011_UART0_BASE + i * 0x1000); 
+//         }
+//         else
+//         {// uart 3 is different
+//             up->base = (char *)(PL011_UART3_BASE);                   
+//         }        
+//         *(up->base + CNTL) &= ~0x10; // disable UART FIFO
+//         *(up->base + IMSC) |= (RX_BIT | TX_BIT);  // enable TX and RX interrupts for UART
+//         up->n = i; //UART ID
+//         up->indata = up->inhead = up->intail = 0;
+//         up->inroom = SBUFSIZE;
+//         up->outdata = up->outhead = up->outtail = 0;
+//         up->outroom = SBUFSIZE;
+//         up->txon = 0;
+//     }
+// }
+
+
 void do_rx(UART *up)
 {
     char c;
