@@ -75,24 +75,36 @@ $(OBJ_BOARD) : \
 	$(DEVICE_DIR)/board/versatilepb.h
 	$(GCC) $(GCC_FLAGS) $(DEVICE_DIR)/board/versatilepb.c -o $(OBJ_BOARD)
 
-OBJ_KERNEL = \
-	$(BUILD_DIR)/kernel.o \
-	$(BUILD_DIR)/display.o \
-	$(BUILD_DIR)/string.o
-$(OBJ_KERNEL) : \
-	$(KERNEL_DIR)/kernel.c \
-	$(KERNEL_DIR)/display.c \
-	$(KERNEL_DIR)/string.c
-	$(GCC) $(GCC_FLAGS) $(KERNEL_DIR)/kernel.c -o $(BUILD_DIR)/kernel.o
+OBJ_DISPLAY = \
+	$(BUILD_DIR)/display.o
+$(OBJ_DISPLAY) : \
+	$(KERNEL_DIR)/display.c
 	$(GCC) $(GCC_FLAGS) $(KERNEL_DIR)/display.c -o $(BUILD_DIR)/display.o
+
+OBJ_STRING = \
+	$(BUILD_DIR)/string.o
+$(OBJ_STRING) : \
+	$(KERNEL_DIR)/string.c
 	$(GCC) $(GCC_FLAGS) $(KERNEL_DIR)/string.c -o $(BUILD_DIR)/string.o
+
+OBJ_KERNEL = \
+	$(BUILD_DIR)/kernel.o
+#	$(BUILD_DIR)/display.o \
+#	$(BUILD_DIR)/string.o
+$(OBJ_KERNEL) : \
+	$(KERNEL_DIR)/kernel.c
+#	$(KERNEL_DIR)/display.c \
+#	$(KERNEL_DIR)/string.c
+	$(GCC) $(GCC_FLAGS) $(KERNEL_DIR)/kernel.c -o $(BUILD_DIR)/kernel.o
+#	$(GCC) $(GCC_FLAGS) $(KERNEL_DIR)/display.c -o $(BUILD_DIR)/display.o
+#	$(GCC) $(GCC_FLAGS) $(KERNEL_DIR)/string.c -o $(BUILD_DIR)/string.o
 
 CLEAN :
 	$(RMDIR) $(BUILD_DIR)
 	$(MKDIR) $(BUILD_DIR)
 
-MYOS: $(OBJ_RESET) $(OBJ_BOARD) $(OBJ_UART) $(OBJ_TIMER) $(OBJ_KBD) $(OBJ_LCD) $(OBJ_FONT) $(OBJ_KERNEL) $(OBJ_BMP)
-	$(LD) $(OBJ_RESET) $(OBJ_BOARD) $(OBJ_UART) $(OBJ_TIMER) $(OBJ_KBD) $(OBJ_LCD) $(OBJ_FONT) $(OBJ_KERNEL) $(OBJ_BMP) $(WORKSPACE)/$(LIBS) $(LD_FLAGS) -o $(BUILD_DIR)/myos.elf
+MYOS: $(OBJ_RESET) $(OBJ_BOARD) $(OBJ_UART) $(OBJ_TIMER) $(OBJ_KBD) $(OBJ_LCD) $(OBJ_FONT) $(OBJ_KERNEL) $(OBJ_STRING) $(OBJ_DISPLAY) $(OBJ_BMP)
+	$(LD) $(OBJ_RESET) $(OBJ_BOARD) $(OBJ_UART) $(OBJ_TIMER) $(OBJ_KBD) $(OBJ_LCD) $(OBJ_FONT) $(OBJ_KERNEL) $(OBJ_STRING) $(OBJ_DISPLAY) $(OBJ_BMP) $(WORKSPACE)/$(LIBS) $(LD_FLAGS) -o $(BUILD_DIR)/myos.elf
 	$(OBJCOPY) $(OBJCOPY_FLAGS) $(BUILD_DIR)/myos.elf $(BUILD_DIR)/myos.bin
 
 KERNEL_BIN = $(BUILD_DIR)/myos.bin
@@ -100,3 +112,27 @@ QEMU_CMD = qemu-system-arm -s -M versatilepb -cpu arm926 -serial telnet:127.0.0.
 
 DEBUG: MYOS
 	$(QEMU_CMD)
+
+
+# C5_2 start
+OBJ_RESET_C5_2 = $(BUILD_DIR)/C5_2_reset.o
+$(OBJ_RESET_C5_2) : $(KERNEL_DIR)/C5_2_reset.S
+	$(AS) $(AS_FLAGS) $(KERNEL_DIR)/C5_2_reset.S -o $(BUILD_DIR)/C5_2_reset.o
+
+OBJ_KERNEL_C5_2 = \
+	$(BUILD_DIR)/C5_2_kernel.o
+$(OBJ_KERNEL_C5_2) : \
+	$(KERNEL_DIR)/C5_2_kernel.c
+	$(GCC) $(GCC_FLAGS) $(KERNEL_DIR)/C5_2_kernel.c -o $(BUILD_DIR)/C5_2_kernel.o
+
+MYOS_C5_2: $(OBJ_RESET_C5_2) $(OBJ_BOARD) $(OBJ_UART) $(OBJ_TIMER) $(OBJ_KBD) $(OBJ_LCD) $(OBJ_FONT) $(OBJ_KERNEL_C5_2) $(OBJ_STRING) $(OBJ_DISPLAY)
+	$(LD) $(OBJ_RESET_C5_2) $(OBJ_BOARD) $(OBJ_UART) $(OBJ_TIMER) $(OBJ_KBD) $(OBJ_LCD) $(OBJ_FONT) $(OBJ_KERNEL_C5_2) $(OBJ_STRING) $(OBJ_DISPLAY) $(WORKSPACE)/$(LIBS) $(LD_FLAGS) -o $(BUILD_DIR)/MYOS_C5_2.elf
+	$(OBJCOPY) $(OBJCOPY_FLAGS) $(BUILD_DIR)/MYOS_C5_2.elf $(BUILD_DIR)/MYOS_C5_2.bin
+
+KERNEL_BIN_C5_2= $(BUILD_DIR)/MYOS_C5_2.bin
+QEMU_CMD_C5_2 = qemu-system-arm -s -M versatilepb -cpu arm926 -serial telnet:127.0.0.1:1122,server -kernel $(KERNEL_BIN_C5_2)
+
+DEBUG_C5_2: MYOS_C5_2
+	$(QEMU_CMD_C5_2)
+
+# C5_2 end

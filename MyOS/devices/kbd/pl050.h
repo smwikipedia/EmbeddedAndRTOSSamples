@@ -33,5 +33,6 @@ void kbd_init(KBD *kp, u32 PL050_KBD_BASE);
 //void kbd_init();
 void kbd_handler();
 u32 kgets(u8 s[]);
+u8 kgetc();
 
 #endif

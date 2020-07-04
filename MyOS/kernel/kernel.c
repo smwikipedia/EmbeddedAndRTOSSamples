@@ -18,18 +18,6 @@ void main()
     u8 *p;
     u8 line[128];
 
-    VIC_INTENABLE = 0;
-    VIC_INTENABLE |= UART0_IRQ_VIC_BIT;
-    VIC_INTENABLE |= UART1_IRQ_VIC_BIT;
-
-    VIC_INTENABLE |= TIMER01_IRQ_VIC_BIT; // timer0,1 at VIC.bit4
-    VIC_INTENABLE |= TIMER23_IRQ_VIC_BIT; // timer2,3 at VIC.bit5
-
-    VIC_INTENABLE |= SIC_IRQ_VIC_BIT; // SIC to PIC.bit31
-    /* enable KBD IRQ on SIC */
-    SIC_INTENABLE = 0;
-    SIC_INTENABLE |= KMI0_IRQ_SIC_BIT; // KBD int=SIC.bit3
-
     board_init();
     
     up = &uart[0];

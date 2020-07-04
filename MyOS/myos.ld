@@ -1,4 +1,5 @@
-ENTRY(reset_handler) /* OK to remove, seems no use */
+/*Because of below declaration, must specify ".global reset_handler" in reset.S*/
+ENTRY(reset_handler) 
 SECTIONS
 {
 	. = 0x10000; /* loading address */

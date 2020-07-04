@@ -15,6 +15,7 @@ volatile KBD kbd; // KBD data structure
 
 void uart_init()
 {
+    kprintf("uart_init()\n");
     for(u32 i=0; i<MAX_UART_NUMBER; i++)
     {
         UART *up = &uart[i];
@@ -70,8 +71,20 @@ void timer_init()
 
 void board_init()
 {
-    uart_init();
+    VIC_INTENABLE = 0;
+    VIC_INTENABLE |= UART0_IRQ_VIC_BIT;
+    VIC_INTENABLE |= UART1_IRQ_VIC_BIT;
+
+    VIC_INTENABLE |= TIMER01_IRQ_VIC_BIT; // timer0,1 at VIC.bit4
+    VIC_INTENABLE |= TIMER23_IRQ_VIC_BIT; // timer2,3 at VIC.bit5
+
+    VIC_INTENABLE |= SIC_IRQ_VIC_BIT; // SIC to PIC.bit31
+    /* enable KBD IRQ on SIC */
+    SIC_INTENABLE = 0;
+    SIC_INTENABLE |= KMI0_IRQ_SIC_BIT; // KBD int=SIC.bit3
+
     fbuf_init(VERSATILEPB_PL110_LCD_BASE, VERSATILEPB_OSC1);
+    uart_init();    
     timer_init();
     kbd_init(&kbd, VERSATILEPB_PL050_KBD);
 
