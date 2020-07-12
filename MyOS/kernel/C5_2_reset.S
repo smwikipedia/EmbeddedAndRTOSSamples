@@ -31,19 +31,28 @@ tswitch:
     msr cpsr, r0
 
     stmfd sp!, {r0-r12, lr}
-    LDR r0, =running // r0=&running
-    LDR r1, [r0, #0] // r1->runningPROC
+
+    LDR r0, =running // r0=&running, running is a PROC *, so r0 here is a PROC **
+    LDR r1, [r0, #0] // r1=running, r1 is a PROC *
     str sp, [r1, #4] // running->ksp = sp
-    bl scheduler
+
+    bl scheduler     // change the running
+
     LDR r0, =running
-    LDR r1, [r0, #0] // r1->runningPROC
-    lDR sp, [r1, #4]
+    LDR r1, [r0, #0] // r1=running, the new running
+    lDR sp, [r1, #4] // get the sp from the new running PROC, stack switch happens here! the stack of the new PROC should be ready for *resume*!
 
     mrs r0, cpsr // SVC mode, IRQ interrupts on
     bic r0, r0, #0x80
     msr cpsr, r0
-    ldmfd sp!, {r0-r12, pc}
 
+    /*
+    IRQ can happen here. And the task switch will be interrupted.
+    But it should be OK as long as the IRQ handling can return to here.
+    */
+
+    // resume the execution of the new PROC by restoring the context from the new PROC's stack
+    ldmfd sp!, {r0-r12, pc}
 
 
 irq_handler:
