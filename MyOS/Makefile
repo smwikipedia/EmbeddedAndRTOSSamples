@@ -114,16 +114,20 @@ DEBUG: MYOS
 	$(QEMU_CMD)
 
 
-# C5_2 start
-OBJ_RESET_C5_2 = $(BUILD_DIR)/C5_2_reset.o
-$(OBJ_RESET_C5_2) : $(KERNEL_DIR)/C5_2_reset.S
-	$(AS) $(AS_FLAGS) $(KERNEL_DIR)/C5_2_reset.S -o $(BUILD_DIR)/C5_2_reset.o
+# C5_2 start - Simple demo of multi-tasking
+C5_2_BLD_DIR = $(BUILD_DIR)/C5_2
+C5_2_SRC_DIR = $(KERNEL_DIR)/C5_2
 
-OBJ_KERNEL_C5_2 = \
-	$(BUILD_DIR)/C5_2_kernel.o
-$(OBJ_KERNEL_C5_2) : \
-	$(KERNEL_DIR)/C5_2_kernel.c
-	$(GCC) $(GCC_FLAGS) $(KERNEL_DIR)/C5_2_kernel.c -o $(BUILD_DIR)/C5_2_kernel.o
+CREATE_BLD_DIR_C_5_2:
+	mkdir -p $(C5_2_BLD_DIR)
+
+OBJ_RESET_C5_2 = $(C5_2_BLD_DIR)/reset.o
+$(OBJ_RESET_C5_2) : CREATE_BLD_DIR_C_5_2 $(C5_2_SRC_DIR)/reset.S
+	$(AS) $(AS_FLAGS) $(C5_2_SRC_DIR)/reset.S -o $(C5_2_BLD_DIR)/reset.o
+
+OBJ_KERNEL_C5_2 = $(C5_2_BLD_DIR)/kernel.o
+$(OBJ_KERNEL_C5_2) : CREATE_BLD_DIR_C_5_2 $(C5_2_SRC_DIR)/kernel.c
+	$(GCC) $(GCC_FLAGS) $(C5_2_SRC_DIR)/kernel.c -o $(C5_2_BLD_DIR)/kernel.o
 
 MYOS_C5_2: $(OBJ_RESET_C5_2) $(OBJ_BOARD) $(OBJ_UART) $(OBJ_TIMER) $(OBJ_KBD) $(OBJ_LCD) $(OBJ_FONT) $(OBJ_KERNEL_C5_2) $(OBJ_STRING) $(OBJ_DISPLAY)
 	$(LD) $(OBJ_RESET_C5_2) $(OBJ_BOARD) $(OBJ_UART) $(OBJ_TIMER) $(OBJ_KBD) $(OBJ_LCD) $(OBJ_FONT) $(OBJ_KERNEL_C5_2) $(OBJ_STRING) $(OBJ_DISPLAY) $(WORKSPACE)/$(LIBS) $(LD_FLAGS) -o $(BUILD_DIR)/MYOS_C5_2.elf
@@ -136,3 +140,13 @@ DEBUG_C5_2: MYOS_C5_2
 	$(QEMU_CMD_C5_2)
 
 # C5_2 end
+
+
+# C5_3 start - Dynamic process creation
+C5_3_BLD_DIR = $(BUILD_DIR)/C5_3
+C5_3_SRC_DIR = $(KERNEL_DIR)/C5_3
+
+CREATE_BLD_DIR_C_5_3:
+	mkdir -p $(C5_3_BLD_DIR)
+
+# C5_3 end
