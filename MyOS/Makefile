@@ -149,4 +149,24 @@ C5_3_SRC_DIR = $(KERNEL_DIR)/C5_3
 CREATE_BLD_DIR_C_5_3:
 	mkdir -p $(C5_3_BLD_DIR)
 
+OBJ_RESET_C5_3 = $(C5_3_BLD_DIR)/reset.o
+$(OBJ_RESET_C5_3) : CREATE_BLD_DIR_C_5_3 $(C5_3_SRC_DIR)/reset.S
+	$(AS) $(AS_FLAGS) $(C5_3_SRC_DIR)/reset.S -o $(C5_3_BLD_DIR)/reset.o
+
+OBJS_KERNEL_C5_3 = $(C5_3_BLD_DIR)/kernel.o \
+				   $(C5_3_BLD_DIR)/proc.o \
+				   $(C5_3_BLD_DIR)/queue.o
+$(OBJS_KERNEL_C5_3) : $(C5_3_BLD_DIR)/%.o : $(C5_3_SRC_DIR)/%.c
+	$(GCC) $(GCC_FLAGS) $< -o $@
+
+MYOS_C5_3: $(OBJ_RESET_C5_3) $(OBJ_BOARD) $(OBJ_UART) $(OBJ_TIMER) $(OBJ_KBD) $(OBJ_LCD) $(OBJ_FONT) $(OBJS_KERNEL_C5_3) $(OBJ_STRING) $(OBJ_DISPLAY)
+	$(LD) $(OBJ_RESET_C5_3) $(OBJ_BOARD) $(OBJ_UART) $(OBJ_TIMER) $(OBJ_KBD) $(OBJ_LCD) $(OBJ_FONT) $(OBJS_KERNEL_C5_3) $(OBJ_STRING) $(OBJ_DISPLAY) $(WORKSPACE)/$(LIBS) $(LD_FLAGS) -o $(BUILD_DIR)/MYOS_C5_3.elf
+	$(OBJCOPY) $(OBJCOPY_FLAGS) $(BUILD_DIR)/MYOS_C5_3.elf $(BUILD_DIR)/MYOS_C5_3.bin
+
+KERNEL_BIN_C5_3= $(BUILD_DIR)/MYOS_C5_3.bin
+QEMU_CMD_C5_3 = qemu-system-arm -s -M versatilepb -cpu arm926 -serial telnet:127.0.0.1:1122,server -kernel $(KERNEL_BIN_C5_3)
+
+DEBUG_C5_3: MYOS_C5_3
+	$(QEMU_CMD_C5_3)
+
 # C5_3 end

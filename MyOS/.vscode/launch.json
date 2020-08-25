@@ -9,7 +9,7 @@
             "type": "gdb",
             "request": "attach",
             "name": "Attach to gdbserver",
-            "executable": "${workspaceRoot}/build/MYOS_C5_2.elf",
+            "executable": "${workspaceRoot}/build/MYOS_C5_3.elf",
             "target": "127.0.0.1:1234",
             "remote": true,
             "cwd": "${workspaceRoot}",
