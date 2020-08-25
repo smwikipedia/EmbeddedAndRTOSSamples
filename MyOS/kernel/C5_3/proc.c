@@ -15,7 +15,7 @@ u32 kfork(u32 func, u32 priority)
     if (p == NULL)
     {
         kprintf("no more PROC, kfork failed\n");
-        return -1; // return -1 for FAIL
+        return RET_FAIL; // return RET_FAIL for FAIL
     }
 
     p->status = READY;

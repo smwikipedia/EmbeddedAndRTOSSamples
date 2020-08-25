@@ -105,7 +105,25 @@ u32 main()
     while (1)
     {
         while (readyQueue == NULL)
-            ; // P0 loops if readyQueue empty
+        {
+            kprintf("proc %d with priority %d in body() input a char [s|f] : ", running->pid, running->priority);
+            c = kgetc();
+            kprintf("%c\n", c);
+            switch (c)
+            {
+            case 's':
+                tswitch();
+                break;
+            case 'f':
+                kfork((u32)body, PRIORITY_1);
+                break;
+            // if readyQueue is empty, then proc[0] serve as the IDLE task. It should never exit.
+            // the enqueue method will ensure that proc[0] is always the last element for its priority.
+            // case 'x':
+            //     kexit();
+            //     break;
+            }
+        }
         tswitch();
     }
 }
