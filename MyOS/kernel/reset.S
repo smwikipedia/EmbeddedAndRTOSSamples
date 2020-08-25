@@ -33,7 +33,7 @@ lock:
     mrs r0, cpsr
     orr r0, r0, #0x80 // set the I bit to disable IRQ
     msr cpsr, r0
-    mov pc, lr // return, by ARM C calling convention, the lr=pc-4, i.e. the next instruction
+    mov pc, lr // return, by ARM C calling convention, the lr=pc-4, i.e. the next instruction to be executed
 
 unlock:
     mrs r0, cpsr
