@@ -106,8 +106,9 @@ void do_tx(UART *up)
     No, we don't need to worry about that.
     Because according to the PL011 spec, the TX interrupt will be raised *after* the single-char is transmitted.
     So once we are here in do_tx(), we are safe to write another char into UDR.
-
-    So the lesson is, we just need to be careful about the timing!
+    
+    Actually, most output devices raise interrupts *after* output is done.
+    So the lesson is, we just need to be careful about the timing of the interrupt!
 
     */
     c = up->outbuf[up->outtail++];
