@@ -8,6 +8,8 @@ The book says the sample code can be found at <http://www.eecs.wsu.edu/~cs460/AR
 But it seems no longer available.
 
 I practice the sample code and put them here together with detailed steps and notes.
+Since I cannot find the official sample code for the book, and the book doesn't list all the code.
+I have to implement some based on my understanding.
 
 And perhaps more samples of my own.
 
