@@ -170,3 +170,37 @@ DEBUG_C5_3: MYOS_C5_3
 	$(QEMU_CMD_C5_3)
 
 # C5_3 end
+
+
+# C5_4 start - Sleep/Wakeup paradigm
+C5_4_BLD_DIR = $(BUILD_DIR)/C5_4
+C5_4_SRC_DIR = $(KERNEL_DIR)/C5_4
+
+CREATE_BLD_DIR_C_5_4:
+	mkdir -p $(C5_4_BLD_DIR)
+
+OBJ_RESET_C5_4 = $(C5_4_BLD_DIR)/reset.o
+$(OBJ_RESET_C5_4) : CREATE_BLD_DIR_C_5_4 $(C5_4_SRC_DIR)/reset.S
+	$(AS) $(AS_FLAGS) $(C5_4_SRC_DIR)/reset.S -o $(C5_4_BLD_DIR)/reset.o
+
+OBJS_KERNEL_C5_4 = $(C5_4_BLD_DIR)/kernel.o \
+				   $(C5_4_BLD_DIR)/proc.o \
+				   $(C5_4_BLD_DIR)/queue.o
+$(OBJS_KERNEL_C5_4) : $(C5_4_BLD_DIR)/%.o : $(C5_4_SRC_DIR)/%.c
+	$(GCC) $(GCC_FLAGS) $< -o $@
+
+OBJ_KBD_SLEEP_WAKEUP = $(BUILD_DIR)/kbd.o
+$(OBJ_KBD_SLEEP_WAKEUP) : $(DEVICE_DIR)/kbd/pl050_sleep_wakeup.c $(DEVICE_DIR)/kbd/pl050.h
+	$(GCC) $(GCC_FLAGS) $(DEVICE_DIR)/kbd/pl050_sleep_wakeup.c -o $(OBJ_KBD_SLEEP_WAKEUP)
+
+MYOS_C5_4: $(OBJ_RESET_C5_4) $(OBJ_BOARD) $(OBJ_UART) $(OBJ_TIMER) $(OBJ_KBD_SLEEP_WAKEUP) $(OBJ_LCD) $(OBJ_FONT) $(OBJS_KERNEL_C5_4) $(OBJ_STRING) $(OBJ_DISPLAY)
+	$(LD) $(OBJ_RESET_C5_4) $(OBJ_BOARD) $(OBJ_UART) $(OBJ_TIMER) $(OBJ_KBD_SLEEP_WAKEUP) $(OBJ_LCD) $(OBJ_FONT) $(OBJS_KERNEL_C5_4) $(OBJ_STRING) $(OBJ_DISPLAY) $(WORKSPACE)/$(LIBS) $(LD_FLAGS) -o $(BUILD_DIR)/MYOS_C5_4.elf
+	$(OBJCOPY) $(OBJCOPY_FLAGS) $(BUILD_DIR)/MYOS_C5_4.elf $(BUILD_DIR)/MYOS_C5_4.bin
+
+KERNEL_BIN_C5_4= $(BUILD_DIR)/MYOS_C5_4.bin
+QEMU_CMD_C5_4 = qemu-system-arm -s -M versatilepb -cpu arm926 -serial telnet:127.0.0.1:1122,server -kernel $(KERNEL_BIN_C5_4)
+
+DEBUG_C5_4: MYOS_C5_4
+	$(QEMU_CMD_C5_4)
+
+# C5_3 end

@@ -1,3 +1,7 @@
+/*
+This version of driver follows the busy-wait paradigm.
+*/
+
 #include "types.h"
 #include "display.h"
 #include "string.h"

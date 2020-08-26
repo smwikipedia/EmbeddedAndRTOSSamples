@@ -18,7 +18,7 @@ we may only need change these base addresses.
 #define KCLK 0x0C  // clock divisor register; (not used)
 #define KISTA 0x10 // interrupt status register;(not used)
 
-#define MAX_KBD_CHAR_BUFFER_SIZE 5
+#define MAX_KBD_CHAR_BUFFER_SIZE 100
 
 typedef volatile struct kbd
 {                               // base = 0x10006000
