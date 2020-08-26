@@ -216,6 +216,10 @@ void kprints(u8 *s)
     while(*s)
     {
         kputc(*s);
+        if(*s == '\n')
+        {
+            kputc('\r');
+        }
         s++;
     }
 }
@@ -297,7 +301,7 @@ void kprintf(u8* fmt, ...)
     u32 *ip;
     u8 *cp;
     cp = fmt;
-    ip = (u32*)((u32)&fmt + sizeof(u8*));//(u32*)&fmt + 1;
+    ip = (u32*)((u32)&fmt + sizeof(u8*));//points to the first var arg that follows fmt immediately.
 
     while(*cp)
     {
