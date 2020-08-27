@@ -189,7 +189,7 @@ OBJS_KERNEL_C5_4 = $(C5_4_BLD_DIR)/kernel.o \
 $(OBJS_KERNEL_C5_4) : $(C5_4_BLD_DIR)/%.o : $(C5_4_SRC_DIR)/%.c
 	$(GCC) $(GCC_FLAGS) $< -o $@
 
-OBJ_KBD_SLEEP_WAKEUP = $(BUILD_DIR)/kbd.o
+OBJ_KBD_SLEEP_WAKEUP = $(BUILD_DIR)/kbd_sleep_wakeup.o
 $(OBJ_KBD_SLEEP_WAKEUP) : $(DEVICE_DIR)/kbd/pl050_sleep_wakeup.c $(DEVICE_DIR)/kbd/pl050.h
 	$(GCC) $(GCC_FLAGS) $(DEVICE_DIR)/kbd/pl050_sleep_wakeup.c -o $(OBJ_KBD_SLEEP_WAKEUP)
 
