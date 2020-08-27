@@ -8,8 +8,7 @@ This version of driver follows the sleep/wakeup paradigm introduced in $5.6 Proc
 #include "pl050.h"
 //#include "pl011.h"
 #include "versatilepb.h"
-
-extern KBD kbd;
+#include "debug.h"
 
 // defined in ts.S
 // synchoronize methods for the upper half of the interrupt-driven driver.
@@ -118,15 +117,54 @@ void kbd_handler() // KBD interrupt handler in C
         c = charmap[scode];
     }
 
-    if(kp->room == 0)
+    /* 
+    head: the next place in buffer to place the input char
+    tail: the next buffered char to retrieve
+    */
+    if(kp->head == kp->tail)
     {
-        return;
+        if(kp->data == MAX_KBD_CHAR_BUFFER_SIZE)
+        {
+            ASSERT(kp->room == 0);
+            /*
+            head catches up with tail from behind
+            which means the buffer is full,
+            the newly incoming c will overwrite the old tail
+            push both head and tail forward
+            data and room remain unchanged
+            */            
+            kp->buf[kp->head++] = c;
+            kp->head %= MAX_KBD_CHAR_BUFFER_SIZE;  
+            kp->tail++;            
+            kp->tail %= MAX_KBD_CHAR_BUFFER_SIZE;
+            // kp->data = MAX_KBD_CHAR_BUFFER_SIZE;
+            // kp->room = 0;
+        }
+        else if (kp->data == 0)
+        {
+            /*
+            tail catches up with head from behind
+            which means the buffer is empty,
+            just push the head forward, the tail remains still.
+            */             
+            kp->buf[kp->head++] = c;
+            kp->head %= MAX_KBD_CHAR_BUFFER_SIZE; 
+            kp->data++;
+            kp->room--;
+        }
+        else
+        {
+            ASSERT(FALSE);
+        }
     }
-    
-    kp->buf[kp->head++] = c; // enter key into CIRCULAR buf[]
-    kp->head %= MAX_KBD_CHAR_BUFFER_SIZE;
-    kp->data++;
-    kp->room--; // update counters
+    else
+    {
+        kp->buf[kp->head++] = c;
+        kp->head %= MAX_KBD_CHAR_BUFFER_SIZE;
+        kp->data++;
+        kp->room--;
+    }
+      
 
     //kprintf("%c[head:%d, tail:%d, data:%d,  room:%d]\n", c, kp->head, kp->tail, kp->data, kp->room); // echo to LCD
     //uprintf(up, "%c[head:%d, tail:%d, data:%d,  room:%d]\n", c, kp->head, kp->tail, kp->data, kp->room); // echo to UART
@@ -171,7 +209,7 @@ u8 kgetc() // return a char from keyboard in sleep/wakeup paradigm
             c = kp->buf[kp->tail++];
             kp->tail %= MAX_KBD_CHAR_BUFFER_SIZE;
             kp->data--;
-            kp->room = ((kp->room + 1) > MAX_KBD_CHAR_BUFFER_SIZE ? MAX_KBD_CHAR_BUFFER_SIZE : kp->room + 1);
+            kp->room = MAX_KBD_CHAR_BUFFER_SIZE - kp->data;
             unlock();
             return c;
         }
