@@ -1,0 +1,3 @@
+The 12x16 font is downloaded from below URL.
+Thanks to the author named "Plons".
+https://www.avrfreaks.net/forum/8x16-ascii-font-table

@@ -1,0 +1,29 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/kernel/includes",
+                "${workspaceFolder}/resource/fonts",
+                "${workspaceFolder}/devices/board",
+                "${workspaceFolder}/devices/lcd",
+                "${workspaceFolder}/devices/uart",
+                "${workspaceFolder}/devices/vic",
+                "${workspaceFolder}/devices/timer",
+                "${workspaceFolder}/devices/kbd"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "windowsSdkVersion": "8.1",
+            "compilerPath": "C:/D/DevBins/ARM/gcc-arm-none-eabi-9-2019-q4-major-win32-profile-RM/bin/arm-none-eabi-gcc.exe",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "gcc-x64"
+        }
+    ],
+    "version": 4
+}
