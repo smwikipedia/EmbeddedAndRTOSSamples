@@ -164,7 +164,9 @@ void kbd_handler() // KBD interrupt handler in C
         kp->data++;
         kp->room--;
     }
-      
+
+    //below echo is just for better illustration, in real life, I don't think a driver should do this.  
+    kprintf("%c", c);
 
     //kprintf("%c[head:%d, tail:%d, data:%d,  room:%d]\n", c, kp->head, kp->tail, kp->data, kp->room); // echo to LCD
     //uprintf(up, "%c[head:%d, tail:%d, data:%d,  room:%d]\n", c, kp->head, kp->tail, kp->data, kp->room); // echo to UART
