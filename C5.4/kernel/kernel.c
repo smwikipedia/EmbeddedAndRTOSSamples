@@ -28,30 +28,30 @@ void printAll()
     printList("sleepQueue", sleepQueue);
 }
 
-void body()
-{
-    u8 c;
-    //color = running->pid;
-    kprintf("proc %d resume to body()\n", running->pid);
-    while (1)
-    {
-        kprintf("proc %d in body() input a char [s|f|x] : ", running->pid);
-        c = kgetc();
-        kprintf("%c\n", c);
-        switch (c)
-        {
-        case 's':
-            tswitch();
-            break;
-        case 'f':
-            kfork((u32)body, PRIORITY_1);
-            break;
-        case 'x':
-            kexit();
-            break;
-        }
-    }
-}
+// void body()
+// {
+//     u8 c;
+//     //color = running->pid;
+//     kprintf("proc %d resume to body()\n", running->pid);
+//     while (1)
+//     {
+//         kprintf("proc %d in body() input a char [s|f|x] : ", running->pid);
+//         c = kgetc();
+//         kprintf("%c\n", c);
+//         switch (c)
+//         {
+//         case 's':
+//             tswitch();
+//             break;
+//         case 'f':
+//             kfork((u32)body, PRIORITY_1);
+//             break;
+//         case 'x':
+//             kexit();
+//             break;
+//         }
+//     }
+// }
 
 u32 kernel_init()
 {
