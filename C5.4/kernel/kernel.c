@@ -125,11 +125,19 @@ void kbd_task()
     u8 line[MAX_KBD_CHAR_BUFFER_SIZE];
     while(1)
     {
+        kprintf("KBD task %d running\n", running->pid);        
         kprintf("KBD task %d sleep for a line from KBD...\n", running->pid);
-        ksleep((u32)&kbd);
-        kprintf("KBD task %d running\n", running->pid);
+        /*
+        KC Want's book has below line.
+        But I think a task shouldn't go to sleep so explicitly.
+        kgets() calls kgetc(), which will call ksleep() if no char in buffer.
+        So I commented out below line.
+        It still works fine.
+        */
+        //ksleep((u32)&kbd);
+
         kgets(line);
-        kprintf("line = %s", line);
+        kprintf("PROC %d get this: %s", running->pid, line);
     }
 }
 
@@ -195,7 +203,15 @@ u32 main()
     kprintf("Thank you! Professor K.C. Wang.\n");
     kernel_init();
     
-    kfork((u32)kbd_task, PRIORITY_1); // proc[0] create proc[1] into readyQueue, with priority 1
+    // proc[0] create proc[1] into readyQueue, with priority 1
+    // proc[1] will never get char in this experiment
+    kfork((u32)kbd_task, PRIORITY_1);
+    // proc[0] create proc[2] into readyQueue, with priority 1
+    // proc[2] will never get char in this experiment
+    kfork((u32)kbd_task, PRIORITY_1);
+    // proc[0] create proc[3] with a higher priority
+    // proc[3] will ALWAYS get char in this experiment because of its high priority.
+    kfork((u32)kbd_task, PRIORITY_2);
 
     while (1)
     {

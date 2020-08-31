@@ -14,6 +14,7 @@
 //PROC priority, smaller value means lower priority
 #define PRIORITY_0 0
 #define PRIORITY_1 1
+#define PRIORITY_2 2
 
 typedef struct proc
 {

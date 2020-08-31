@@ -172,7 +172,12 @@ void kbd_handler() // KBD interrupt handler in C
     //uprintf(up, "%c[head:%d, tail:%d, data:%d,  room:%d]\n", c, kp->head, kp->tail, kp->data, kp->room); // echo to UART
     //kprintf("%c", c); // echo to LCD
 
-    // rasie event for line completion
+    /*
+    Rasie event for line completion
+    Actually, I was thinking maybe it is inappropriate for kbd_handler() to wake up a task.
+    But in this experiment, we have no other things can do this but the kbd_handler.
+    Maybe in future examples, we will have more interesting/realistic options.    
+    */
     if(c == '\n')
     {
         kwakeup((u32)&kbd);
