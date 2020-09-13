@@ -11,8 +11,12 @@
 #include "queue.h"
 
 extern void tswitch();
-extern u32 int_off(void);
-extern void int_on(u32 cpsr);
+
+// in KC Wang's book, below 2 functions are named int_off, int_on
+// but it has nothing to do with interrupt
+// so I changed the names and implementation
+extern u32 get_cpsr(void);
+extern void restore_cpsr(u32 cpsr);
 
 void ksleep(u32 event);
 void kwakeup(u32 event);
@@ -144,11 +148,16 @@ void kbd_task()
 
 void ksleep(u32 event)
 {
-    u32 old_cpsr = int_off();
+    // in KC Wang's book, below line is int_off()
+    // but the sematic has nothing to do with interrupt, so I change the name
+    u32 old_cpsr = get_cpsr();
     running->event = event;
     running->status = SLEEP;
     tswitch();
-    int_on(old_cpsr);
+    
+    // in KC Wang's book, below line is int_on()
+    // but the sematic has nothing to do with interrupt, so I change the name
+    restore_cpsr(old_cpsr);
 }
 
 /*
@@ -158,7 +167,7 @@ And maintain the sleep queue by priority.
 */
 void kwakeup(u32 event)
 {
-    u32 old_cpsr = int_off();
+    u32 old_cpsr = get_cpsr();
     
     PROC *current = NULL;
     PROC *previous = NULL;
@@ -189,7 +198,7 @@ void kwakeup(u32 event)
         }
     }
     
-    int_on(old_cpsr);
+    restore_cpsr(old_cpsr);
 }
 
 u32 main()

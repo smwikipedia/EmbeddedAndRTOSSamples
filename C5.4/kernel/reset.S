@@ -5,7 +5,11 @@
 .global kernel_init, main, proc, procsize
 .global tswitch, scheduler, running
 .global lock, unlock // disable/enable interrupt
-.global int_off, int_on // disable/enable interrupt while handling the CPSR
+
+// in KC Wang's book, below 2 functions are named int_off, int_on
+// but it has nothing to do with interrupt
+// so I changed the names and implementation
+.global get_cpsr, restore_cpsr//int_off, int_on // get and restore the CPSR
 
 reset_handler:
     // set SVC sp to proc[0] high end
@@ -77,15 +81,20 @@ unlock: // enable IRQ interrupts
     MSR cpsr, r0
     MOV pc, lr
 
-int_off: // disable IRQ and return CPSR
+// in KC Wang's book, below function is named int_off
+// but it has nothing to do with interrupt
+// so I changed the name and implementation
+get_cpsr: // only return CPSR
     MRS r1, cpsr // load cpsr into r1
     MOV r0, r1 // store cpsr in r0 as the return value
-    ORR r1, r1, #0x80 // set IRQ mask bit
-    MSR cpsr, r1 // disable interrupt
+    //ORR r1, r1, #0x80 // set IRQ mask bit  // maybe we don't need to care about interrupt here.
+    //MSR cpsr, r1 // disable interrupt
     MOV pc, lr  // return by put lr into pc, lr (= old pc-4) is the next instruction to execute
 
-
-int_on: //restore original CPSR, void int_on(u32 CPSR)
+// in KC Wang's book, below function is named int_on
+// but it has nothing to do with interrupt
+// so I changed the name and implementation
+restore_cpsr: //restore original CPSR, void int_on(u32 CPSR)
     MSR cpsr, r0 // parameter 1 is passed through r0
     MOV pc, lr
 
