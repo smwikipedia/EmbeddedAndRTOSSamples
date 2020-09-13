@@ -16,7 +16,7 @@ extern void tswitch();
 // but it has nothing to do with interrupt
 // so I changed the names and implementation
 extern u32 get_cpsr(void);
-extern void restore_cpsr(u32 cpsr);
+extern void set_cpsr(u32 cpsr);
 
 void ksleep(u32 event);
 void kwakeup(u32 event);
@@ -157,7 +157,7 @@ void ksleep(u32 event)
     
     // in KC Wang's book, below line is int_on()
     // but the sematic has nothing to do with interrupt, so I change the name
-    restore_cpsr(old_cpsr);
+    set_cpsr(old_cpsr);
 }
 
 /*
@@ -198,7 +198,7 @@ void kwakeup(u32 event)
         }
     }
     
-    restore_cpsr(old_cpsr);
+    set_cpsr(old_cpsr);
 }
 
 u32 main()

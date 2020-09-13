@@ -9,7 +9,7 @@
 // in KC Wang's book, below 2 functions are named int_off, int_on
 // but it has nothing to do with interrupt
 // so I changed the names and implementation
-.global get_cpsr, restore_cpsr//int_off, int_on // get and restore the CPSR
+.global get_cpsr, set_cpsr//int_off, int_on // get and set the CPSR
 
 reset_handler:
     // set SVC sp to proc[0] high end
@@ -94,7 +94,7 @@ get_cpsr: // only return CPSR
 // in KC Wang's book, below function is named int_on
 // but it has nothing to do with interrupt
 // so I changed the name and implementation
-restore_cpsr: //restore original CPSR, void int_on(u32 CPSR)
+set_cpsr: //restore original CPSR, void int_on(u32 CPSR)
     MSR cpsr, r0 // parameter 1 is passed through r0
     MOV pc, lr
 
