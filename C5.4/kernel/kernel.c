@@ -230,7 +230,9 @@ u32 main()
             Task 0 will yield its execution.
             */
             tswitch(); // This is one of the tswitch() point, carefully choose the point.
-        }        
+            kprintf("\n.....");
+        }
+        // Still busy loop here...       
     }
 }
 
