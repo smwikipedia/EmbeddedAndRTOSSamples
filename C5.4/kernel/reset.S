@@ -34,35 +34,49 @@ reset_handler:
     B .
 
 tswitch:
-    mrs r0, cpsr // SVC mode, IRQ interrupts off
-    orr r0, r0, #0x80
-    msr cpsr, r0
+    mrs r0, cpsr      // SVC mode, IRQ interrupts off
+    orr r0, r0, #0x80 // 1000 0000, bit[7]=1 to disable IRQ
+    msr cpsr, r0      // IRQ disabled
 
-    stmfd sp!, {r0-r12, lr}
+    /*
+    Save the context in the stack of current task.
+    */
+    stmfd sp!, {r0-r12, lr} // totally 14 registers
 
+    /*
+    Save current task's sp in current task's PROC structure.
+    */
     LDR r0, =running // r0=&running, running is a PROC *, so r0 here is a PROC **
     LDR r1, [r0, #0] // r1=running, r1 is a PROC *
     str sp, [r1, #4] // running->ksp = sp
 
-    // change the running
+    // change the global "running"
     // note that the "task switch" and "task scheduling" are 2 different things.
-    // so decoupled.
+    // thus decoupled.
     bl scheduler
+    // now a new running task has been selected, it can still the last one.
 
-    LDR r0, =running
-    LDR r1, [r0, #0] // r1=running, the new running
-    lDR sp, [r1, #4] // get the sp from the new running PROC, stack switch happens here! the stack of the new PROC should be ready for *resume*!
+    /*
+    Get the sp from the new task's PROC structure.
+    */
+    LDR r0, =running // r0=&running, running is a PROC *, so r0 here is a PROC **
+    LDR r1, [r0, #0] // r1=running, r1 is a PROC *, the new running
+    lDR sp, [r1, #4] // get the sp from the new running PROC, "stack switch" happens here! the stack of the new PROC must already be ready for *resume*!
 
-    mrs r0, cpsr // SVC mode, IRQ interrupts on
-    bic r0, r0, #0x80
-    msr cpsr, r0
+    mrs r0, cpsr      // SVC mode, IRQ interrupts on
+    bic r0, r0, #0x80 // 1000 0000, bit[7] cleared to enable IRQ.
+    msr cpsr, r0      // IRQ enabled
 
     /*
     IRQ can happen here. And the task switch will be interrupted.
     But it should be OK as long as the IRQ handling can return to here.
     */
 
-    // resume the execution of the new PROC by restoring the context from the new PROC's stack
+    /*
+     Resume the execution of the new PROC by restoring the context from the new PROC's stack
+     The new task's PROC.ksp field doesn't need to be updated here.
+     It will be updated when the task is scheduled out.
+    */
     ldmfd sp!, {r0-r12, pc}
 
 

@@ -21,11 +21,17 @@ u32 kfork(u32 func, u32 priority)
     p->status = READY;
     p->priority = priority;
 
-    // set kstack for proc resume to execute func()
+    /*
+    Prepare the content of the kstack of the obtained proc.
+    So it can resume to execute func().
+    For task 0, which is the initial task, we don't need to do this.
+    Because task 0 already started.
+    It doesn't need to prepare its stack content for fake resumption.
+    */
     for (i = 1; i < 15; i++)
-        p->kstack[SSIZE - i] = 0;      // all "saved" regs = 0
-    p->kstack[SSIZE - 1] = func;       // resume execution address
-    p->ksp = &(p->kstack[SSIZE - 14]); // saved ksp
+        p->kstack[SSIZE - i] = 0;      // all "saved" regs = 0, here we save 14 registers because we save {r0-r12, lr} in tswitch function. 
+    p->kstack[SSIZE - 1] = func;       // resume execution address, the last one is the stack bottom (high addr) to hold the "lr", which is for the resume.
+    p->ksp = &(p->kstack[SSIZE - 14]); // set ksp to point to the stack top (low addr), 14 because we pretend to have saved {r0-r12, lr} in the stack.
 
     enqueue(&readyQueue, p);           // enter p into readyQueue
 

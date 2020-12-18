@@ -72,7 +72,7 @@ u32 kernel_init()
     }
     proc[NPROC-1].next = NULL;
     
-    freeList = &proc[0]; // all PROCs in freeList
+    freeList = &proc[0]; // all PROCs in freeList initially
     readyQueue = NULL; // readyQueue empty
     sleepQueue = NULL; // sleepQueue empty
 
@@ -153,7 +153,7 @@ void ksleep(u32 event)
     u32 old_cpsr = get_cpsr();
     running->event = event;
     running->status = SLEEP;
-    tswitch();
+    tswitch(); // This is one of the time point to call tswitch(). Carefully chose the point.
     
     // in KC Wang's book, below line is int_on()
     // but the sematic has nothing to do with interrupt, so I change the name
@@ -226,7 +226,10 @@ u32 main()
     {
         if (readyQueue != NULL)
         {
-            tswitch();
+            /*
+            Task 0 will yield its execution.
+            */
+            tswitch(); // This is one of the tswitch() point, carefully choose the point.
         }        
     }
 }
