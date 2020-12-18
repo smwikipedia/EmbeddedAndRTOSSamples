@@ -131,7 +131,7 @@ void clrcursor() // clear cursor at current (row, col)
 /*
 Print char at current cursor location.
 And then move cursor to the next available location.
-The cursor movement can depends on 'c' for '\n', 'r', and '\b'
+The cursor movement depends on 'c' for '\n', 'r', and '\b'
 The cursor always stays at a printable location.
 */
 void putcursor(u8 c) // put cursor (row, col)

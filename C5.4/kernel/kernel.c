@@ -231,6 +231,10 @@ u32 main()
     }
 }
 
+/*
+Copy interrupt/exception vectors to address 0.
+This is a requirment of the ARM arch.
+*/
 void copy_vectors()
 {
     extern u32 vectors_start, vectors_end;

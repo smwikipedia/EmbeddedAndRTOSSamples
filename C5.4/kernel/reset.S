@@ -12,20 +12,23 @@
 .global get_cpsr, set_cpsr//int_off, int_on // get and set the CPSR
 
 reset_handler:
-    // set SVC sp to proc[0] high end
-    // ming: because we set the SVC stack to proc, so no need to use the "svc_stack_top" defined in the myos.ld
-    LDR r0, =proc
-    LDR r1, =procsize
-    LDR r2, [r1, #0]
-    ADD r0, r0, r2
-    MOV sp, r0
+    // The ARM processor enters SVC mode when turned on, reset or executing SWI instruction.
+    // Set SVC stack sp to proc[0] high end
+    // ming: because we set the SVC stack to locaton within PROC struct, no need to use the "svc_stack_top" defined in the myos.ld
+    LDR r0, =proc       // r0 = &proc[0], proc[NPROC] is defined in kernel.c
+    LDR r1, =procsize   // r1 = &procsize, procsize is defined in kernel.c as "u32 procsize = sizeof(PROC);"
+    LDR r2, [r1, #0]    // r2 = procsize
+    ADD r0, r0, r2      // r0 points to the last byte of proc[0], i.e. &(proc[0].kstack[SSIZE - 1]);
+    MOV sp, r0          // set up the SVC mode sp as proc[0] high end
+
     // copy vector table to address 0
-    BL copy_vectors
+    BL copy_vectors     // defined in kernel.c
+
     // go in IRQ mode to set IRQ stack
-    MSR cpsr, #0x92
-    LDR sp, =irq_stack_top
+    MSR cpsr, #0x92        // 1001 0010, bit[7]=1, interrupt disabled, IRQ mode = 10010 
+    LDR sp, =irq_stack_top // set the sp_irq to irq_stack_top, which is defined in myos.ld
     // go back to SVC mode with IRQ enabled
-    MSR cpsr, #0x13
+    MSR cpsr, #0x13        // 0001 0011, SVC mode = 10011, bit[7]=0, interrupt enabled
     // call main() in SVC mode
     BL main
     B .
