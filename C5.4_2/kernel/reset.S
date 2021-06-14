@@ -63,14 +63,14 @@ tswitch:
     STR r10, [r1, #48]
     STR r11, [r1, #52]
     STR r12, [r1, #56]
-    STR lr, [r1, #60]
+    STR lr, [r1, #60] // lr is the next instruction to run for the switched-out task
 
 
     // change the global "running"
     // note that the "task switch" and "task scheduling" are 2 different things.
     // thus decoupled.
     bl scheduler
-    // now a new running task has been selected, it can still the last one.
+    // now a new running task has been selected, it can still be the last one.
 
     /*
     Get the sp from the new task's PROC structure.

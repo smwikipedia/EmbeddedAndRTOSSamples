@@ -4,6 +4,7 @@
         "types.h": "c",
         "pl011.h": "c",
         "versatilepb.h": "c",
-        "cstdio": "c"
+        "cstdio": "c",
+        "queue.h": "c"
     }
 }

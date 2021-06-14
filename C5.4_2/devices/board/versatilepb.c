@@ -9,9 +9,10 @@
 #include "sp804.h"
 #include "pl050.h"
 
+// global data structure instances for the device instances on the versatilepb board
 volatile UART uart[MAX_UART_NUMBER]; // 4 UART structures
 volatile TIMER timer[MAX_TIMER_NUMBER]; //4 timers; 2 per unit; at 0x00 and 0x20
-volatile KBD kbd; // KBD data structure
+volatile KBD kbd; // 1 kbd; KBD data structure
 
 void uart_init()
 {

@@ -70,7 +70,7 @@ u32 kernel_init()
         p->status = FREE;
         p->next = p + 1;
     }
-    proc[NPROC-1].next = NULL;
+    proc[NPROC-1].next = NULL; // fix the last one
     
     freeList = &proc[0]; // all PROCs in freeList initially
     readyQueue = NULL; // readyQueue empty
@@ -85,8 +85,8 @@ u32 kernel_init()
     p = get_proc(&freeList);
     ASSERT(p == &proc[0]);
     p->priority = PRIORITY_0; // P0 has the lowest priority 0
-    p->status = READY;
-    running = p;
+    p->status = READY; // proc[0] is always READY, it can always run when there's no other tasks to run
+    running = p; // now the "running" is consistent with what we have done in "reset_handler"
 
     //kprintf("after start proc[0]\n");
     //kprintf("running = %d\n", running->pid);
@@ -99,6 +99,8 @@ void scheduler()
     switch (running->status)
     {
         case READY: // if the running is still ready, enqueue it for next slice.
+            // the proc[0] task is special that it is always READY. it is the very first task of the system.
+            // it can always run when there's no other tasks to run.
             enqueue(&readyQueue, running);
             break;
         case SLEEP: // I don't know how K.C. Wang's book implement it. I guess there should be a sleepQueue.
@@ -109,7 +111,7 @@ void scheduler()
             break; // won't reach here.
     }
         
-    running = dequeue(&readyQueue);
+    running = dequeue(&readyQueue); // there should be other tasks to run, otherwise, the proc[0] is always in the readyQueue to run.
     kprintf("next running = %d\n", running->pid);
     printAll();   
 }
@@ -132,7 +134,7 @@ void kbd_task()
         kprintf("KBD task %d running\n", running->pid);        
         kprintf("KBD task %d sleep for a line from KBD...\n", running->pid);
         /*
-        KC Want's book has below line.
+        KC Wang's book has below line.
         But I think a task shouldn't go to sleep so explicitly.
         kgets() calls kgetc(), which will call ksleep() if no char in buffer.
         So I commented out below line.
@@ -153,6 +155,7 @@ void ksleep(u32 event)
     u32 old_cpsr = get_cpsr();
     running->event = event;
     running->status = SLEEP;
+    // One more task fall asleep, it's reasonable to do a task switch.
     tswitch(); // This is one of the time point to call tswitch(). Carefully chose the point.
     
     // in KC Wang's book, below line is int_on()
@@ -203,6 +206,10 @@ void kwakeup(u32 event)
 
 u32 main()
 {
+    //Since we have set SVC mode stack to proc[0]'s kstack,
+    //main() will runs on that stack.
+    //main() may be seen as the very first task of the system whose stack is set up by brutal force.
+
     u8 c;
     //fbuf_init(); // initialize LCD driver
     //kbd_init();  // initialize KBD driver
@@ -224,12 +231,18 @@ u32 main()
 
     while (1)
     {
+        //we are on proc[0]'s stack
         if (readyQueue != NULL)
         {
             /*
-            Task 0 will yield its execution.
+            proc[0] will yield its execution.
+            The stack will change to the new task's. Though it may still be the switch-out one.
+            If there's no tasks to run, proc[0] is always READY to run. In that case, the stack will still be proc[0]'s.
+            And in that case, the while loop will continue to run.
+            If there's some other task to run, the while loop will cease to run.
             */
             tswitch(); // This is one of the tswitch() point, carefully choose the point.
+
             kprintf("\n.....");
         }
         // Still busy loop here...       

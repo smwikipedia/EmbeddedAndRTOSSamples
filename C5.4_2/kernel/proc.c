@@ -70,5 +70,5 @@ void kexit() // called by process to terminate
     // give up CPU
     // though the saving part of the tswitch will still work on the exiting proc,
     // it is meaningless for a proc that have called kexit().
-    tswitch();
+    tswitch(); // this is one of the places that task swich should be carried out.
 }
