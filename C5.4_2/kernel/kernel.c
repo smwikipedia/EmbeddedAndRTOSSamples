@@ -123,7 +123,23 @@ void timer_task()
 
 void uart_task()
 {
+    u8 line[MAX_KBD_CHAR_BUFFER_SIZE]; // just borrow the macro from kbd
+    while(1)
+    {
+        kprintf("UART0 task %d running\n", running->pid);        
+        kprintf("UART0 task %d sleep for a line from remote serial port...\n", running->pid);
+        /*
+        KC Wang's book has below line.
+        But I think a task shouldn't go to sleep so explicitly.
+        kgets() calls kgetc(), which will call ksleep() if no char in buffer.
+        So I commented out below line.
+        It still works fine.
+        */
+        //ksleep((u32)&kbd);
 
+        ugets(&uart[0], line);
+        kprintf("UART0 task %d get this: %s", running->pid, line);
+    }
 }
 
 void kbd_task()
@@ -221,13 +237,13 @@ u32 main()
     
     // proc[0] create proc[1] into readyQueue, with priority 1
     // proc[1] will never get char in this experiment
-    kfork((u32)kbd_task, PRIORITY_1);
+    kfork((u32)uart_task, PRIORITY_2);
     // proc[0] create proc[2] into readyQueue, with priority 1
     // proc[2] will never get char in this experiment
-    kfork((u32)kbd_task, PRIORITY_1);
+    //kfork((u32)kbd_task, PRIORITY_1);
     // proc[0] create proc[3] with a higher priority
     // proc[3] will ALWAYS get char in this experiment because of its high priority.
-    kfork((u32)kbd_task, PRIORITY_2);
+    kfork((u32)kbd_task, PRIORITY_1);
 
     while (1)
     {

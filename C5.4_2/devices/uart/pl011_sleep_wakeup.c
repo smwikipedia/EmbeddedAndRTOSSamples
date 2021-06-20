@@ -5,7 +5,8 @@
 extern void lock();
 extern void unlock();
 
-
+extern void ksleep(u32 event);
+extern void kwakeup(u32 event);
 
 /*
 Initialize a single UART.
@@ -69,6 +70,17 @@ void do_rx(UART *up)
     This function doesn't do the echo back.
     It just faithfully collect incoming chars and put them into the up->inbuf[].
     */
+    /*
+    Rasie event for line completion
+    Actually, I was thinking maybe it is inappropriate for kbd_handler() to wake up a task.
+    But in this experiment, we have no other parties can do this but the kbd_handler.
+    Maybe in future examples, we will have more interesting/realistic options.    
+    */
+    if(c == '\r') // '\r' is sent as a new line char
+    {
+        kwakeup((u32)up);
+    }
+
 }
 
 /*
@@ -152,9 +164,30 @@ This function just consume chars fro mthe up->inbuf[].
 u8 ugetc(UART *up)
 {
     u8 c;
-    while (up->indata <= 0)
-        ; // no data in buffer, just block!
-    c = up->inbuf[up->intail];
+    // while (up->indata <= 0)
+    //     ; // no data in buffer, just block!
+    // c = up->inbuf[up->intail];
+
+    while(1)
+    {
+        lock();
+        if(up->indata <= 0)
+        {
+            unlock();            
+            ksleep((u32)up);
+        }
+        else
+        {
+            c = up->inbuf[up->intail];
+            up->intail++;
+            up->intail %= SBUFSIZE;
+            up->indata--; // a buffered char is handled
+            up->inroom++; // a buffered char is handled
+            unlock();
+            return c;
+        }
+
+    }
 
     /*
     When updating the control variables in the upper-half of an interrupt-based device driver,

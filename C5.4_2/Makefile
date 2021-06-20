@@ -37,8 +37,8 @@ $(OBJ_BMP) : $(RESOURCE_DIR)/images/image.bmp
 	$(OBJCOPY) -I binary -O elf32-littlearm -B arm $(RESOURCE_DIR)/images/image.bmp $(BUILD_DIR)/image.o
 
 OBJ_UART = $(BUILD_DIR)/uart.o
-$(OBJ_UART) : $(DEVICE_DIR)/uart/pl011.c $(DEVICE_DIR)/uart/pl011.h
-	$(GCC) $(GCC_FLAGS) $(DEVICE_DIR)/uart/pl011.c -o $(OBJ_UART)
+$(OBJ_UART) : $(DEVICE_DIR)/uart/pl011_sleep_wakeup.c $(DEVICE_DIR)/uart/pl011.h
+	$(GCC) $(GCC_FLAGS) $(DEVICE_DIR)/uart/pl011_sleep_wakeup.c -o $(OBJ_UART)
 
 OBJ_TIMER = $(BUILD_DIR)/timer.o
 $(OBJ_TIMER) : $(DEVICE_DIR)/timer/sp804.c $(DEVICE_DIR)/timer/sp804.h

@@ -1,6 +1,7 @@
 #ifndef VERSATILEPB_H
 #define VERSATILEPB_H
 
+#include "pl011.h"
 
 /*
 Base addresses of 4 UARTs on versatilepb board.
@@ -57,4 +58,6 @@ VIC for versatilepb
 #define VERSATILEPB_PL110_LCD_TIME_REG2 0x10120008
 
 void board_init();
+
+extern volatile UART uart[MAX_UART_NUMBER]; 
 #endif

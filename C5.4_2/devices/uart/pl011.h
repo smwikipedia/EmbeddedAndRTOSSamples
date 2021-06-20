@@ -1,7 +1,6 @@
 #ifndef PL011_UART_H
 #define PL011_UART_H
 #include "types.h"
-#include "versatilepb.h"
 
 
 /* 
@@ -67,9 +66,6 @@ typedef volatile struct uart {
     u32 outdata, outroom, outhead, outtail;
     volatile u32 txon;  // 1 = TX interrput is on, the UART is in transmitting state
 } UART;
-
-extern UART uart[MAX_UART_NUMBER];
-
 
 //void uart_init();
 void uart_init_single(UART *up, u32 uart_base);
