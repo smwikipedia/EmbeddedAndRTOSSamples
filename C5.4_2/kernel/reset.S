@@ -69,7 +69,7 @@ tswitch:
     // change the global "running"
     // note that the "task switch" and "task scheduling" are 2 different things.
     // thus decoupled.
-    bl scheduler
+    bl scheduler // we are still using the old task's stack to call scheduler
     // now a new running task has been selected, it can still be the last one.
 
     /*
@@ -84,7 +84,7 @@ tswitch:
     msr cpsr, r0      // IRQ enabled
 
     /*
-    IRQ can happen from now on. And the task switch will be interrupted.
+    IRQ can happen from now on. Thus the tswitch can be interrupted.
     But it should be OK as long as the IRQ handling can return to here.
     */
 
