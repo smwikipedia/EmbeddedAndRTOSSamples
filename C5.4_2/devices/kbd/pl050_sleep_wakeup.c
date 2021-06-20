@@ -226,12 +226,15 @@ u8 kgetc() // return a char from keyboard in sleep/wakeup paradigm
 u32 kgets(u8 s[]) // get a string from KBD
 {
     u8 c;
+    u32 nextCharPosition = 0;
     while ((c = kgetc()) != '\n')
     {
-        *s++ = c;
+        s[nextCharPosition] = c;
+        nextCharPosition++;
+        // max char size is (MAX_KBD_CHAR_BUFFER_SIZE - 1), reserve one char for the ending '\0'.
+        nextCharPosition = nextCharPosition % (MAX_KBD_CHAR_BUFFER_SIZE - 1);
     }
-    *s = '\n';
-    s++;
-    *s = 0;
+    s[nextCharPosition] = '\n';
+    s[nextCharPosition + 1] = 0;
     return strlen(s);
 }
