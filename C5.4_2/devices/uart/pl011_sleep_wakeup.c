@@ -10,6 +10,10 @@ extern void kwakeup(u32 event);
 
 /*
 Initialize a single UART.
+Note that below code only works on QEMU ARM versatilepb board.
+It seems QEMU automatically uses default value for baud rate resgiers.
+So we don't do it here.
+This is not correct for UART in real hardware.
 */
 void uart_init_single(UART *up, u32 uart_base)
 {
