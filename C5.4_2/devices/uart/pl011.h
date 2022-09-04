@@ -25,8 +25,8 @@ we may only need change these base addresses.
 
 //UART flag register (offset 0x18) values
 #define TXFE 0x80 // fifo is disabled, bit 7 set when tx holding register is empty
-#define TXFF 0x20 // fifo is disabled, bit 6 set when tx holding register is full
-#define RXFE 0x10 // fifo is disabled, bit 6 set when rx holding register is empty
+#define TXFF 0x20 // fifo is disabled, bit 5 set when tx holding register is full
+#define RXFE 0x10 // fifo is disabled, bit 4 set when rx holding register is empty
 #define RXFF 0x40 // fifo is disabled, bit 6 set when rx holding register is full
 #define BUSY 0x08 // bit 3 set when UART busy transmitting data
 

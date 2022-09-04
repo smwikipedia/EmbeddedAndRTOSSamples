@@ -163,7 +163,7 @@ void uart_handler(UART *up)
 
 /*
 do_rx() is responsible to collect incoming chars into up->inbuf[].
-This function just consume chars fro mthe up->inbuf[].
+This function just consume chars from the up->inbuf[].
 */
 u8 ugetc(UART *up)
 {
