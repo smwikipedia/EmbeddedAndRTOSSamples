@@ -341,6 +341,9 @@ void uprintx(UART *up, i32 x)
     urpx(up, x);
 }
 
+/*
+uart recursive print unsigned
+*/
 void urpu(UART *up, u32 x)
 {
     if (x == 0)

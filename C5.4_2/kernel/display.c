@@ -258,6 +258,9 @@ void kprintx(i32 x)
     krpx(x);
 }
 
+/*
+kernel recursive print unsigned
+*/
 void krpu(u32 x)
 {
     if(x == 0)
