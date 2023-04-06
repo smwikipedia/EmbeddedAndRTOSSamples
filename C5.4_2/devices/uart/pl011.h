@@ -35,7 +35,7 @@ we may only need change these base addresses.
 #define TX_BIT (1<<5) // TX interrupt mask bit in IMSC register, also TX interrupt status bit in MIS register.
 
 //string buffer size
-#define SBUFSIZE 5
+#define SBUFSIZE 50
 
 /*
 outdata: how many chars in outbuf to be transmitted

@@ -13,8 +13,8 @@
 
 reset_handler:
     // The ARM processor enters SVC mode when turned on, reset or executing SWI instruction.
-    // Set SVC stack sp to proc[0] high end
-    // ming: because we set the SVC stack to locaton within PROC struct, no need to use the "svc_stack_top" defined in the myos.ld
+    // Set stack for SVC mode, the stack top is at proc[0] high end
+    // ming: because we set the SVC stack to locaton within PROC struct, NO need to use the "svc_stack_top" defined in the myos.ld
     LDR r0, =proc       // r0 = &proc[0], proc[NPROC] is defined in kernel.c
     LDR r1, =procsize   // r1 = &procsize, procsize is defined in kernel.c as "u32 procsize = sizeof(PROC);"
     LDR r2, [r1, #0]    // r2 = procsize
@@ -24,17 +24,19 @@ reset_handler:
     // copy vector table to address 0
     BL copy_vectors     // defined in kernel.c
 
-    // go in IRQ mode to set IRQ stack
+    // set stack for IRQ mode
     MSR cpsr, #0x92        // 1001 0010, bit[7]=1, interrupt disabled, IRQ mode = 10010 
     LDR sp, =irq_stack_top // set the sp_irq to irq_stack_top, which is defined in myos.ld
+
     // go back to SVC mode with IRQ enabled
     MSR cpsr, #0x13        // 0001 0011, SVC mode = 10011, bit[7]=0, interrupt enabled
+
     // call main() in SVC mode
     BL main
     B .
 
 tswitch:
-    mrs r0, cpsr      // SVC mode, IRQ interrupts off
+    mrs r0, cpsr      // SVC mode
     orr r0, r0, #0x80 // 1000 0000, bit[7]=1 to disable IRQ
     msr cpsr, r0      // IRQ disabled
 
@@ -77,7 +79,7 @@ tswitch:
     */
     LDR r0, =running // r0=&running, running is a PROC *, so r0 here is a PROC **
     LDR r1, [r0, #0] // r1=running, r1 is a PROC *, the new running
-    lDR sp, [r1, #4] // get the sp from the new running PROC, "stack switch" happens here! the stack of the new PROC must already be ready for *resume*!
+    lDR sp, [r1, #4] // get the sp from the new running PROC, "stack switch" happens here! the stack of the new PROC must already be ready for *resume*, maybe a fake one to start the task!
 
     mrs r0, cpsr      // SVC mode, IRQ interrupts on
     bic r0, r0, #0x80 // 1000 0000, bit[7] cleared to enable IRQ.

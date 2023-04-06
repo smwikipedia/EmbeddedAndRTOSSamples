@@ -24,9 +24,8 @@ u32 kfork(u32 func, u32 priority)
     /*
     Prepare the content of the kstack of the obtained proc.
     So it can resume to execute func().
-    For task 0, which is the initial task, we don't need to do this.
-    Because task 0 already started.
-    It doesn't need to prepare its stack content for fake resumption.
+    For task 0, which is the initial task and has already started,
+    it doesn't need to prepare its stack content for fake resumption.
     */
     // for (i = 1; i < 15; i++)
     //     p->kstack[SSIZE - i] = 0;      // all "saved" regs = 0, here we save 14 registers because we save {r0-r12, lr} in tswitch function. 
@@ -50,8 +49,8 @@ u32 kfork(u32 func, u32 priority)
     p->lr = func;
 
 
-
-    enqueue(&readyQueue, p);           // enter p into readyQueue
+    // p is ready, but it is not started yet
+    enqueue(&readyQueue, p);
 
     kprintf("%d kforked a new proc %d\n", running->pid, p->pid);
     printList("freeList", freeList);

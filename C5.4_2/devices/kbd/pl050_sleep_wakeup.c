@@ -73,7 +73,8 @@ void kbd_init(KBD *kp, u32 PL050_KBD_BASE)
 //     kp->head = kp->tail = 0;             // index to buffer
 // }
 
-void kbd_handler() // KBD interrupt handler in C
+// KBD interrupt handler in C
+void kbd_handler()
 {
     u8 scode, c;
     u32 i;
@@ -82,7 +83,7 @@ void kbd_handler() // KBD interrupt handler in C
     scode = *(kp->base + KDATA); // read scan code in data register
 
     // below 2 lines are used to get the scancode of the keyboard.
-    //kprintf("kbd interrupt: scode = %d\n", scode);
+    // kprintf("kbd interrupt: scode = %d\n", scode);
     //return;
 
     if (key_release)
@@ -121,6 +122,7 @@ void kbd_handler() // KBD interrupt handler in C
     head: the next place in buffer to place the input char
     tail: the next buffered char to retrieve
     */
+    // kprintf("\n01- head:%d, tail:%d, data:%d", kp->head, kp->tail, kp->data);
     if(kp->head == kp->tail)
     {
         if(kp->data == MAX_KBD_CHAR_BUFFER_SIZE)
@@ -165,7 +167,11 @@ void kbd_handler() // KBD interrupt handler in C
         kp->room--;
     }
 
-    //below echo is just for better illustration, in real life, I don't think a driver should do this.  
+    // kprintf("\n02- head:%d, tail:%d, data:%d\n", kp->head, kp->tail, kp->data);
+
+    // below echo is just for better illustration, in real life, I don't think a driver should do this.  
+    // I cannont put it elsewhere like in the ugetc() because the task is not waken up until a '\n' is received.
+    // So I have to put it here in the interrupt handler.
     kprintf("%c", c);
 
     //kprintf("%c[head:%d, tail:%d, data:%d,  room:%d]\n", c, kp->head, kp->tail, kp->data, kp->room); // echo to LCD
@@ -203,6 +209,12 @@ u8 kgetc() // return a char from keyboard in sleep/wakeup paradigm
     u8 c;
     KBD *kp = &kbd;
 
+    /*
+    Below while loop is very critical.
+    It ensures the task will immediately look for the data once awakened.
+    The return always happen in the else clause.
+    If there's no while loop, the function will finish in the if clause with a random return value.
+    */
     while(1)
     {
         lock();
@@ -234,7 +246,8 @@ u32 kgets(u8 s[]) // get a string from KBD
         // max char size is (MAX_KBD_CHAR_BUFFER_SIZE - 1), reserve one char for the ending '\0'.
         nextCharPosition = nextCharPosition % (MAX_KBD_CHAR_BUFFER_SIZE - 1);
     }
-    s[nextCharPosition] = '\n';
-    s[nextCharPosition + 1] = 0;
+    s[nextCharPosition++] = '\n';
+    s[nextCharPosition++] = '\r';
+    s[nextCharPosition] = 0;
     return strlen(s);
 }

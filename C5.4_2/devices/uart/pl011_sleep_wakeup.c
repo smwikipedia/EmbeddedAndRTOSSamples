@@ -1,5 +1,6 @@
 #include "pl011.h"
 #include "types.h"
+#include "display.h"
 
 // defined in ts.S
 extern void lock();
@@ -7,6 +8,8 @@ extern void unlock();
 
 extern void ksleep(u32 event);
 extern void kwakeup(u32 event);
+
+void uputc(UART *up, u8 c);
 
 /*
 Initialize a single UART.
@@ -26,7 +29,13 @@ void uart_init_single(UART *up, u32 uart_base)
     up->inroom = SBUFSIZE;
     up->outdata = up->outhead = up->outtail = 0;
     up->outroom = SBUFSIZE;
-    up->txon = 0;    
+    up->txon = 0;
+
+    for (i=0; i<SBUFSIZE; i++)
+    {
+        up->inbuf[i] = 0;
+        up->outbuf[i] = 0;
+    }
 }
 
 
@@ -70,10 +79,10 @@ void do_rx(UART *up)
     up->indata++;           // a newly received char is buffered
     up->inroom--;           // a newly received char is buffered
 
-    /*
-    This function doesn't do the echo back.
-    It just faithfully collect incoming chars and put them into the up->inbuf[].
-    */
+    uputc(up, c); // echo back to telnet client
+    kprintf("%c", c); // echo back to LCD
+
+
     /*
     Rasie event for line completion
     Actually, I was thinking maybe it is inappropriate for kbd_handler() to wake up a task.
@@ -138,9 +147,14 @@ void do_tx(UART *up)
     Kind of like self-relaying.
     I just give it a first move by uputc(), then the UART just keeps running by itself unitl no data to transmit.
     */
-    *(up->base + UDR) = (u32)c;
     up->outdata--; // a buffered char is transmitted
     up->outroom++; // a buffered char is transmitted
+
+    /*
+    This line should be a last action.
+    Because the metadata change like above 2 lines should be finished before the TX IRQ is triggered.
+    */
+    *(up->base + UDR) = (u32)c;
 }
 
 void uart_handler(UART *up)
@@ -156,6 +170,8 @@ void uart_handler(UART *up)
     }
     else
     {
+        // print error msg on screen, not uart.
+        kprintf("Something unpected happened in uart_handler()\n");
         while (1)
             ; // dead loop, something unexpected happened.
     }
@@ -171,14 +187,17 @@ u8 ugetc(UART *up)
     // while (up->indata <= 0)
     //     ; // no data in buffer, just block!
     // c = up->inbuf[up->intail];
+    // kprintf("-----%d\n", up->indata);
 
+    // The while loop is critical, it ensures a valid c is obtained from the uart inbuf.
+    // Similar to kgetc() in keyboard driver.
     while(1)
     {
         lock();
         if(up->indata <= 0)
         {
-            unlock();            
-            ksleep((u32)up);
+            unlock();
+            ksleep((u32)up); // task swich happens here!!
         }
         else
         {
@@ -186,6 +205,7 @@ u8 ugetc(UART *up)
             up->intail++;
             up->intail %= SBUFSIZE;
             up->indata--; // a buffered char is handled
+            // kprintf("%d,", up->indata);
             up->inroom++; // a buffered char is handled
             unlock();
             return c;
@@ -215,13 +235,15 @@ u8 ugetc(UART *up)
     to smoothly couple the hardware and software.
 
     */
-    lock();
-    up->intail++;
-    up->intail %= SBUFSIZE;
-    up->indata--; // a buffered char is handled
-    up->inroom++; // a buffered char is handled
-    unlock();
-    return c;
+
+    // below code will never execute
+    // lock();
+    // up->intail++;
+    // up->intail %= SBUFSIZE;
+    // up->indata--; // a buffered char is handled
+    // up->inroom++; // a buffered char is handled
+    // unlock();
+    // return c;
 }
 
 void uputc(UART *up, u8 c)
@@ -287,7 +309,9 @@ void ugets(UART *up, char *s)
 {
     while ((*s = ugetc(up)) != '\r')
     {
-        uputc(up, *s); // echo back as user is typing so user can see what he has just input.
+        // below echo back won't work because it's part of the task, it won't get executed until a '\n' is received.
+        // echo back should be placed in the uart interrupt handler
+        // uputc(up, *s); // echo back as user is typing so user can see what he has just input.
         s++;
     }
 

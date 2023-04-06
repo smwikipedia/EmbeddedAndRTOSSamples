@@ -27,8 +27,7 @@ void uart_init()
         else
         {// uart 3 is different
             uart_init_single(up, VERSATILEPB_PL011_UART3);
-        }          
-
+        }
     }
 }
 
@@ -85,7 +84,7 @@ void board_init()
     SIC_INTENABLE |= KMI0_IRQ_SIC_BIT; // KBD int=SIC.bit3
 
     fbuf_init(VERSATILEPB_PL110_LCD_BASE, VERSATILEPB_OSC1);
-    uart_init();    
+    uart_init();
     timer_init();
     kbd_init(&kbd, VERSATILEPB_PL050_KBD);
 

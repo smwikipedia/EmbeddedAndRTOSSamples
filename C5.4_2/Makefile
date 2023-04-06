@@ -1,8 +1,9 @@
 # C5_4 - Sleep/Wakeup paradigm
-AS = arm-none-eabi-as
-GCC = arm-none-eabi-gcc
-LD = arm-none-eabi-ld
-OBJCOPY = arm-none-eabi-objcopy
+ARM_TOOLCHAIN_PREFIX=arm-none-eabi-
+AS = $(ARM_TOOLCHAIN_PREFIX)as
+GCC = $(ARM_TOOLCHAIN_PREFIX)gcc
+LD = $(ARM_TOOLCHAIN_PREFIX)ld
+OBJCOPY = $(ARM_TOOLCHAIN_PREFIX)objcopy
 
 RMDIR = rm -r -f
 MKDIR = mkdir -p
@@ -96,7 +97,9 @@ KERNEL: $(OBJ_RESET) $(OBJ_BOARD) $(OBJ_UART) $(OBJ_TIMER) $(OBJ_KBD_SLEEP_WAKEU
 	$(LD) $(OBJ_RESET) $(OBJ_BOARD) $(OBJ_UART) $(OBJ_TIMER) $(OBJ_KBD_SLEEP_WAKEUP) $(OBJ_LCD) $(OBJ_FONT) $(OBJS_KERNEL) $(OBJ_STRING) $(OBJ_DISPLAY) $(WORKSPACE)/$(LIBS) $(LD_FLAGS) -o $(KERNEL_ELF)
 	$(OBJCOPY) $(OBJCOPY_FLAGS) $(KERNEL_ELF) $(KERNEL_BIN)
 
-QEMU_CMD = qemu-system-arm -s -M versatilepb -cpu arm926 -serial telnet:127.0.0.1:1122,server -kernel $(KERNEL_BIN)
+QEMU_CMD = qemu-system-arm -s -M versatilepb -cpu arm926 -serial telnet:127.0.0.1:1124,server -kernel $(KERNEL_BIN)
+# QEMU_CMD = qemu-system-arm -s -M versatilepb -cpu arm926 -nographic -kernel $(KERNEL_BIN)
+# QEMU_CMD = qemu-system-arm -s -M versatilepb -cpu arm926 -serial telnet:10.30.5.209:1123,server -kernel $(KERNEL_BIN)
 
 
 CREATE_BLD_DIR:

@@ -21,12 +21,19 @@ extern void set_cpsr(u32 cpsr);
 void ksleep(u32 event);
 void kwakeup(u32 event);
 
+
+// proc[0] is used in reset.S
 PROC proc[NPROC];
-PROC *running, *freeList, *readyQueue, *sleepQueue;
+
+PROC *running;
+
+// head-less single list
+PROC *freeList, *readyQueue, *sleepQueue;
 u32 procsize = sizeof(PROC);
 
 void printAll()
 {
+    // return;
     printList("freeList", freeList);
     printList("readyQueue", readyQueue);
     printList("sleepQueue", sleepQueue);
@@ -71,7 +78,7 @@ u32 kernel_init()
         p->next = p + 1;
     }
     proc[NPROC-1].next = NULL; // fix the last one
-    
+
     freeList = &proc[0]; // all PROCs in freeList initially
     readyQueue = NULL; // readyQueue empty
     sleepQueue = NULL; // sleepQueue empty
@@ -126,19 +133,21 @@ void uart_task()
     u8 line[MAX_KBD_CHAR_BUFFER_SIZE]; // just borrow the macro from kbd
     while(1)
     {
-        kprintf("UART0 task %d running\n", running->pid);        
+        kprintf("UART0 task %d running\n", running->pid);
         kprintf("UART0 task %d sleep for a line from remote serial port...\n", running->pid);
         /*
         KC Wang's book has below line.
         But I think a task shouldn't go to sleep so explicitly.
-        kgets() calls kgetc(), which will call ksleep() if no char in buffer.
+        ugets() calls ugetc(), which will call ksleep() if no char in buffer.
         So I commented out below line.
         It still works fine.
         */
         //ksleep((u32)&kbd);
-
+        // kprintf("-----> %d\n", uart[0].indata);
         ugets(&uart[0], line);
         kprintf("UART0 task %d get this: %s", running->pid, line);
+        uprints(&uart[0], "UART0 task get this:");
+        uprints(&uart[0], line);
     }
 }
 
@@ -147,7 +156,7 @@ void kbd_task()
     u8 line[MAX_KBD_CHAR_BUFFER_SIZE];
     while(1)
     {
-        kprintf("KBD task %d running\n", running->pid);        
+        kprintf("KBD task %d running\n", running->pid);
         kprintf("KBD task %d sleep for a line from KBD...\n", running->pid);
         /*
         KC Wang's book has below line.
@@ -159,7 +168,9 @@ void kbd_task()
         //ksleep((u32)&kbd);
 
         kgets(line);
-        kprintf("PROC %d get this: %s", running->pid, line);
+        kprintf("\nKBD task %d get this: %s", running->pid, line);
+        uprints(&uart[0], "KBD task get this:");
+        uprints(&uart[0], line);
     }
 }
 
@@ -171,7 +182,7 @@ void ksleep(u32 event)
     u32 old_cpsr = get_cpsr();
     running->event = event;
     running->status = SLEEP;
-    // One more task fall asleep, it's reasonable to do a task switch.
+    // Current task calls ksleep() to fall asleep. So it's reasonable to do a task switch.
     tswitch(); // This is one of the time point to call tswitch(). Carefully chose the point.
     
     // in KC Wang's book, below line is int_on()
@@ -191,6 +202,7 @@ void kwakeup(u32 event)
     PROC *current = NULL;
     PROC *previous = NULL;
     PROC *to_wakeup = NULL;
+
     current = sleepQueue;
     while(current != NULL)
     {
@@ -208,7 +220,7 @@ void kwakeup(u32 event)
             to_wakeup = current;
             to_wakeup->status = READY;
             current = current->next;
-            enqueue(&readyQueue, to_wakeup);            
+            enqueue(&readyQueue, to_wakeup);
         }
         else
         {
@@ -222,28 +234,34 @@ void kwakeup(u32 event)
 
 u32 main()
 {
-    //Since we have set SVC mode stack to proc[0]'s kstack,
-    //main() will runs on that stack.
-    //main() may be seen as the very first task of the system whose stack is set up by brutal force.
+    // Since we have set SVC mode stack to proc[0].kstack[],
+    // main() will runs on that stack.
+    // main() may be seen as the very first task of the system whose stack is set up by brutal force.
 
     u8 c;
-    //fbuf_init(); // initialize LCD driver
-    //kbd_init();  // initialize KBD driver
 
+    // init board, frame buffer, uart, timer
     board_init();    
 
+    // frame buffer initialized, we can use kprintf to draw on screen now
     kprintf("Thank you! Professor K.C. Wang.\n");
     kernel_init();
-    
+
     // proc[0] create proc[1] into readyQueue, with priority 1
     // proc[1] will never get char in this experiment
-    kfork((u32)uart_task, PRIORITY_2);
+    // kfork((u32)uart_task, PRIORITY_1);
     // proc[0] create proc[2] into readyQueue, with priority 1
     // proc[2] will never get char in this experiment
-    //kfork((u32)kbd_task, PRIORITY_1);
+    // kfork((u32)kbd_task, PRIORITY_1);
     // proc[0] create proc[3] with a higher priority
     // proc[3] will ALWAYS get char in this experiment because of its high priority.
+    // kfork((u32)kbd_task, PRIORITY_2);
+
+    // create 2 tasks with equal priority,
+    // both of them can get chars with current ready queue scheduling algorithm.
+    kfork((u32)uart_task, PRIORITY_1);
     kfork((u32)kbd_task, PRIORITY_1);
+
 
     while (1)
     {
@@ -252,16 +270,18 @@ u32 main()
         {
             /*
             proc[0] will yield its execution.
-            The stack will change to the new task's. Though it may still be the switch-out one.
-            If there's no tasks to run, proc[0] is always READY to run. In that case, the stack will still be proc[0]'s.
+            The stack will change to the new task's. Though it may still be the old switched-out one.
+            If there's no task to run, proc[0] is always READY to run. In that case, the stack will still be proc[0]'s.
             And in that case, the while loop will continue to run.
-            If there's some other task to run, the while loop will cease to run.
+            If there's some other task to run, the while loop will yield.
             */
             tswitch(); // This is one of the tswitch() point, carefully choose the point.
 
             kprintf("\n.....");
         }
-        // Still busy loop here...       
+        // Still busy loop here...
+        // if uncomment below line, there'll be endless printing
+        // kprintf("\n|||||");
     }
 }
 
@@ -322,6 +342,7 @@ void IRQ_handler()
     { // PIC.bit31= SIC interrupts
         if (sicstatus & (1 << 3))
         { // SIC.bit3 = KBD interrupt
+            //kprintf("\nkbd handling!");
             kbd_handler();
         }
     }
