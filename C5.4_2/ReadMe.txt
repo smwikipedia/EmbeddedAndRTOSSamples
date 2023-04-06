@@ -14,4 +14,4 @@ The sleep/wakeup operation must be implemented properly, such as atomic.
 TODO:
 - the while loop seems unnecessary in kgetc(); // NO, it is very critical!
 - the SBUFSIZE for uart seems too small; // enlarged
-- the echo back in ugets()/kgets() still not working.
+- the echo back in ugets()/kgets() still not working. // fixed
