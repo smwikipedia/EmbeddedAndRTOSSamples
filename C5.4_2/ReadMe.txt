@@ -11,6 +11,13 @@ This sample demonstrated the sleep/wakeup paradigm for process synchronization.
 Any 2 parts of the system can be coupled together with this paradigm.
 The sleep/wakeup operation must be implemented properly, such as atomic.
 
+Build Notes:
+After downloading the GNU ARM toolchain, locate the libgcc.a file in the toolchain folder.
+Such as: arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi/lib/gcc/arm-none-eabi/13.3.1/libgcc.a
+Copy the libgcc.a to the "libs" directory.
+Then `make BUILD`
+
+Debug Notes:
 About redirecting QEMU UART via telnet, after lauching the QEMU with "make DEBUG",
 use below command in another Linux terminal window to connect to the QEMU uart:
 
