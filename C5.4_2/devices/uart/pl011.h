@@ -64,6 +64,7 @@ typedef volatile struct uart {
     u32 indata, inroom, inhead, intail;
     u8 outbuf[SBUFSIZE];
     u32 outdata, outroom, outhead, outtail;
+    boolean wrap;
     volatile u32 txon;  // 1 = TX interrput is on, the UART is in transmitting state
 } UART;
 

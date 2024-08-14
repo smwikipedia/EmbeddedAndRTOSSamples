@@ -97,7 +97,7 @@ KERNEL: $(OBJ_RESET) $(OBJ_BOARD) $(OBJ_UART) $(OBJ_TIMER) $(OBJ_KBD_SLEEP_WAKEU
 	$(LD) $(OBJ_RESET) $(OBJ_BOARD) $(OBJ_UART) $(OBJ_TIMER) $(OBJ_KBD_SLEEP_WAKEUP) $(OBJ_LCD) $(OBJ_FONT) $(OBJS_KERNEL) $(OBJ_STRING) $(OBJ_DISPLAY) $(WORKSPACE)/$(LIBS) $(LD_FLAGS) -o $(KERNEL_ELF)
 	$(OBJCOPY) $(OBJCOPY_FLAGS) $(KERNEL_ELF) $(KERNEL_BIN)
 
-QEMU_CMD = qemu-system-arm -s -M versatilepb -cpu arm926 -serial telnet:127.0.0.1:1124,server -kernel $(KERNEL_BIN)
+QEMU_CMD = qemu-system-arm -s -S -M versatilepb -cpu arm926 -serial telnet:127.0.0.1:1124,server -kernel $(KERNEL_BIN)
 # QEMU_CMD = qemu-system-arm -s -M versatilepb -cpu arm926 -nographic -kernel $(KERNEL_BIN)
 # QEMU_CMD = qemu-system-arm -s -M versatilepb -cpu arm926 -serial telnet:10.30.5.209:1123,server -kernel $(KERNEL_BIN)
 

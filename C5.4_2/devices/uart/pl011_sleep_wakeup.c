@@ -29,6 +29,7 @@ void uart_init_single(UART *up, u32 uart_base)
     up->inroom = SBUFSIZE;
     up->outdata = up->outhead = up->outtail = 0;
     up->outroom = SBUFSIZE;
+    up->wrap = FALSE;
     up->txon = 0;
 
     for (i=0; i<SBUFSIZE; i++)
@@ -69,15 +70,22 @@ void do_rx(UART *up)
 {
     char c;
     c = *(up->base + UDR);
-    if(up->inroom == 0)
-    {
-        return;
-    }
 
     up->inbuf[up->inhead++] = c;
-    up->inhead %= SBUFSIZE; //circular buffer    
-    up->indata++;           // a newly received char is buffered
-    up->inroom--;           // a newly received char is buffered
+    up->inhead %= SBUFSIZE; //circular buffer
+
+    if (up->wrap) {
+        up->intail = up->inhead;
+    }
+
+    if (up->inhead == up->intail) {
+        up->wrap = TRUE;
+    }
+
+    if(up->inroom > 0) {
+        up->indata++;           // a newly received char is buffered
+        up->inroom--;           // a newly received char is buffered
+    }
 
     uputc(up, c); // echo back to telnet client
     kprintf("%c", c); // echo back to LCD
@@ -204,6 +212,9 @@ u8 ugetc(UART *up)
             c = up->inbuf[up->intail];
             up->intail++;
             up->intail %= SBUFSIZE;
+            if (up->intail == up->inhead) {
+                up->wrap = FALSE;
+            }
             up->indata--; // a buffered char is handled
             // kprintf("%d,", up->indata);
             up->inroom++; // a buffered char is handled
