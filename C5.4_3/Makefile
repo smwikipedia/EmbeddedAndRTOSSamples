@@ -16,6 +16,9 @@ KERNEL_DIR = $(WORKSPACE)/kernel
 RESOURCE_DIR = $(WORKSPACE)/resource
 DEVICE_DIR = $(WORKSPACE)/devices
 
+TOOL_CHAIN_DIR_1 = /home/ming/dev/toolchain/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi/lib/gcc/arm-none-eabi/14.2.1
+TOOL_CHAIN_DIR_2 = /home/ming/dev/toolchain/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi/arm-none-eabi
+
 INCLUDES = \
 	-I $(KERNEL_DIR)/includes \
     -I $(RESOURCE_DIR)/fonts \
@@ -24,7 +27,10 @@ INCLUDES = \
     -I $(DEVICE_DIR)/uart \
     -I $(DEVICE_DIR)/vic \
 	-I $(DEVICE_DIR)/timer \
-	-I $(DEVICE_DIR)/kbd
+	-I $(DEVICE_DIR)/kbd \
+	-I $(TOOL_CHAIN_DIR_1)/include \
+	-I $(TOOL_CHAIN_DIR_2)/include \
+	-I $(DEVICE_DIR)/include
 
 LIBS = libs/libgcc.a
 AS_FLAGS = -mcpu=arm926ej-s
@@ -85,21 +91,36 @@ OBJ_RESET = $(BUILD_DIR)/reset.o
 $(OBJ_RESET) : $(KERNEL_DIR)/reset.S
 	$(AS) $(AS_FLAGS) $(KERNEL_DIR)/reset.S -o $(OBJ_RESET)
 
+
 OBJS_KERNEL = $(BUILD_DIR)/kernel.o \
 			  $(BUILD_DIR)/proc.o \
 			  $(BUILD_DIR)/queue.o
 $(OBJS_KERNEL) : $(BUILD_DIR)/%.o : $(KERNEL_DIR)/%.c
 	$(GCC) $(GCC_FLAGS) $< -o $@
 
+
+### 3rd party drivers begin ###
+
+OBJ_UART_PL011_DRV = $(BUILD_DIR)/uart_pl011_drv.o
+$(OBJ_UART_PL011_DRV) : $(DEVICE_DIR)/uart/tf-m/uart_pl011_drv.c $(DEVICE_DIR)/uart/tf-m/uart_pl011_drv.h
+	$(GCC) $(GCC_FLAGS) $(DEVICE_DIR)/uart/tf-m/uart_pl011_drv.c -o $(OBJ_UART_PL011_DRV)
+
+### 3rd party drivers end ###
+
+
+
+
 KERNEL_ELF = $(BUILD_DIR)/MYOS.elf
 KERNEL_BIN = $(BUILD_DIR)/MYOS.bin
-KERNEL: $(OBJ_RESET) $(OBJ_BOARD) $(OBJ_UART) $(OBJ_TIMER) $(OBJ_KBD_SLEEP_WAKEUP) $(OBJ_LCD) $(OBJ_FONT) $(OBJS_KERNEL) $(OBJ_STRING) $(OBJ_DISPLAY)
-	$(LD) $(OBJ_RESET) $(OBJ_BOARD) $(OBJ_UART) $(OBJ_TIMER) $(OBJ_KBD_SLEEP_WAKEUP) $(OBJ_LCD) $(OBJ_FONT) $(OBJS_KERNEL) $(OBJ_STRING) $(OBJ_DISPLAY) $(WORKSPACE)/$(LIBS) $(LD_FLAGS) -o $(KERNEL_ELF)
+KERNEL: $(OBJ_RESET) $(OBJ_BOARD) $(OBJ_UART) $(OBJ_UART_PL011_DRV) $(OBJ_TIMER) $(OBJ_KBD_SLEEP_WAKEUP) $(OBJ_LCD) $(OBJ_FONT) $(OBJS_KERNEL) $(OBJ_STRING) $(OBJ_DISPLAY)
+	$(LD) $(OBJ_RESET) $(OBJ_BOARD) $(OBJ_UART) $(OBJ_UART_PL011_DRV) $(OBJ_TIMER) $(OBJ_KBD_SLEEP_WAKEUP) $(OBJ_LCD) $(OBJ_FONT) $(OBJS_KERNEL) $(OBJ_STRING) $(OBJ_DISPLAY) $(WORKSPACE)/$(LIBS) $(LD_FLAGS) -o $(KERNEL_ELF)
 	$(OBJCOPY) $(OBJCOPY_FLAGS) $(KERNEL_ELF) $(KERNEL_BIN)
 
-QEMU_CMD = qemu-system-arm -s -S -M versatilepb -cpu arm926 -serial telnet:127.0.0.1:1124,server -kernel $(KERNEL_BIN)
+QEMU_CMD_DEBUG = qemu-system-arm -s -S -M versatilepb -cpu arm926 -serial telnet:127.0.0.1:1124,server -kernel $(KERNEL_BIN)
+QEMU_CMD_RUN = qemu-system-arm -s -M versatilepb -cpu arm926 -serial telnet:127.0.0.1:1124,server -kernel $(KERNEL_BIN)
 # QEMU_CMD = qemu-system-arm -s -M versatilepb -cpu arm926 -nographic -kernel $(KERNEL_BIN)
 # QEMU_CMD = qemu-system-arm -s -M versatilepb -cpu arm926 -serial telnet:10.30.5.209:1123,server -kernel $(KERNEL_BIN)
+
 
 
 CREATE_BLD_DIR:
@@ -109,4 +130,6 @@ CLEAN :
 BUILD :  CREATE_BLD_DIR KERNEL
 REBUILD : CLEAN BUILD
 DEBUG : BUILD
-	$(QEMU_CMD)
+	$(QEMU_CMD_DEBUG)
+RUN : BUILD
+	$(QEMU_CMD_RUN)

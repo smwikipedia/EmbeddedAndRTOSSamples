@@ -1,6 +1,7 @@
 #ifndef PL011_UART_H
 #define PL011_UART_H
 #include "types.h"
+#include "tf-m/uart_pl011_drv.h"
 
 
 /* 
@@ -70,6 +71,7 @@ typedef volatile struct uart {
 
 //void uart_init();
 void uart_init_single(UART *up, u32 uart_base);
+void uart_init_single_tf_m(UART *up, u32 uart_base);
 void uart_handler(UART *up);
 void uprints(UART *up, u8 *s);
 void ugets(UART *up, char *s);

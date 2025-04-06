@@ -39,6 +39,40 @@ void uart_init_single(UART *up, u32 uart_base)
     }
 }
 
+void uart_init_single_tf_m(UART *up, u32 uart_base)
+{
+    u32 i;
+    up->base = (u8*)uart_base;
+
+    struct uart_pl011_dev_cfg_t pl011_cfg;
+    struct uart_pl011_dev_data_t pl011_data;
+    struct uart_pl011_dev_t u_dev = {0};
+    u_dev.cfg = &pl011_cfg;
+    u_dev.data = &pl011_data;
+    u_dev.cfg->base = uart_base;
+    
+    uart_pl011_enable(&u_dev);
+    uart_pl011_disable_fifo(&u_dev);
+    uart_pl011_enable_intr(&u_dev, (RX_BIT | TX_BIT));
+    // *(up->base + CNTL) &= ~0x10; // disable UART FIFO
+    // *(up->base + IMSC) |= (RX_BIT | TX_BIT);  // enable TX and RX interrupts for UART
+
+
+    up->n = i; //UART ID
+    up->indata = up->inhead = up->intail = 0;
+    up->inroom = SBUFSIZE;
+    up->outdata = up->outhead = up->outtail = 0;
+    up->outroom = SBUFSIZE;
+    up->wrap = FALSE;
+    up->txon = 0;
+
+    for (i=0; i<SBUFSIZE; i++)
+    {
+        up->inbuf[i] = 0;
+        up->outbuf[i] = 0;
+    }
+}
+
 
 // void uart_init()
 // {
