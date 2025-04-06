@@ -1,0 +1,1 @@
+#define ASSERT(x) do {if (!(x)) {kprintf("[assert!] %s, line: %d", __FILE__, __LINE__); while(1);}} while(0);
