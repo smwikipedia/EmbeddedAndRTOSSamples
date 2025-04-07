@@ -5,30 +5,42 @@
 
 
 #include "pl011.h"
+#include "tf-m/uart_pl011_drv.h"
 #include "pl110.h"
 #include "sp804.h"
 #include "pl050.h"
 
 // global data structure instances for the device instances on the versatilepb board
 volatile UART uart[MAX_UART_NUMBER]; // 4 UART structures
+struct uart_pl011_dev_t pl011_dev[MAX_UART_NUMBER];
+struct uart_pl011_dev_cfg_t pl011_cfg[MAX_UART_NUMBER]; // 4 UART structures for TF_M PL011 driver
+struct uart_pl011_dev_data_t pl011_data[MAX_UART_NUMBER]; // 4 UART structures for TF_M PL011 driver
+
 volatile TIMER timer[MAX_TIMER_NUMBER]; //4 timers; 2 per unit; at 0x00 and 0x20
 volatile KBD kbd; // 1 kbd; KBD data structure
 
 void uart_init()
 {
+    for(u32 i=0; i<MAX_UART_NUMBER; i++)
+    {
+        pl011_dev[i].cfg = &pl011_cfg[i];
+        pl011_dev[i].data = &pl011_data[i];
+    }
+
     kprintf("uart_init() with tf_m driver\n");
     for(u32 i=0; i<MAX_UART_NUMBER; i++)
     {
         UART *up = &uart[i];
+        up->n = i; //UART ID, and it is the index into the pl011_cfg/data[] array.
         if(i != 3)
         {// uart 0 ~ 2 are adjacent
             // uart_init_single(up, VERSATILEPB_PL011_UART0 + i * 0x1000);
-            uart_init_single_tf_m(up, VERSATILEPB_PL011_UART0 + i * 0x1000);
+            uart_init_single_tf_m(up, VERSATILEPB_PL011_UART0 + i * 0x1000, &pl011_dev[i]);
         }
         else
         {// uart 3 is different
             // uart_init_single(up, VERSATILEPB_PL011_UART3);
-            uart_init_single_tf_m(up, VERSATILEPB_PL011_UART3);
+            uart_init_single_tf_m(up, VERSATILEPB_PL011_UART3, &pl011_dev[i]);
         }
     }
 }

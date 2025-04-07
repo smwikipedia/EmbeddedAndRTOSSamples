@@ -60,4 +60,5 @@ VIC for versatilepb
 void board_init();
 
 extern volatile UART uart[MAX_UART_NUMBER]; 
+extern struct uart_pl011_dev_t pl011_dev[MAX_UART_NUMBER];
 #endif

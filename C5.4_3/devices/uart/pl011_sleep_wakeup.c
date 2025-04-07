@@ -1,6 +1,7 @@
 #include "pl011.h"
 #include "types.h"
 #include "display.h"
+#include "versatilepb.h"
 
 // defined in ts.S
 extern void lock();
@@ -24,7 +25,6 @@ void uart_init_single(UART *up, u32 uart_base)
     up->base = (u8*)uart_base;
     *(up->base + CNTL) &= ~0x10; // disable UART FIFO
     *(up->base + IMSC) |= (RX_BIT | TX_BIT);  // enable TX and RX interrupts for UART
-    up->n = i; //UART ID
     up->indata = up->inhead = up->intail = 0;
     up->inroom = SBUFSIZE;
     up->outdata = up->outhead = up->outtail = 0;
@@ -39,21 +39,17 @@ void uart_init_single(UART *up, u32 uart_base)
     }
 }
 
-void uart_init_single_tf_m(UART *up, u32 uart_base)
+void uart_init_single_tf_m(UART *up, u32 uart_base, struct uart_pl011_dev_t *pl011_dev)
 {
     u32 i;
     up->base = (u8*)uart_base;
 
-    struct uart_pl011_dev_cfg_t pl011_cfg;
-    struct uart_pl011_dev_data_t pl011_data;
-    struct uart_pl011_dev_t u_dev = {0};
-    u_dev.cfg = &pl011_cfg;
-    u_dev.data = &pl011_data;
-    u_dev.cfg->base = uart_base;
+    pl011_dev->cfg->base = uart_base;
     
-    uart_pl011_enable(&u_dev);
-    uart_pl011_disable_fifo(&u_dev);
-    uart_pl011_enable_intr(&u_dev, (RX_BIT | TX_BIT));
+    // uart_pl011_init(&pl011_dev, 115200);
+    uart_pl011_enable(pl011_dev);
+    uart_pl011_disable_fifo(pl011_dev);
+    uart_pl011_enable_intr(pl011_dev, (RX_BIT | TX_BIT));
     // *(up->base + CNTL) &= ~0x10; // disable UART FIFO
     // *(up->base + IMSC) |= (RX_BIT | TX_BIT);  // enable TX and RX interrupts for UART
 
@@ -129,7 +125,7 @@ void do_rx(UART *up)
     Rasie event for line completion
     Actually, I was thinking maybe it is inappropriate for kbd_handler() to wake up a task.
     But in this experiment, we have no other parties can do this but the kbd_handler.
-    Maybe in future examples, we will have more interesting/realistic options.    
+    Maybe in future examples, we will have more interesting/realistic options.
     */
     if(c == '\r') // '\r' is sent as a new line char
     {
@@ -156,7 +152,7 @@ void do_tx(UART *up)
         /*
         Clear the MIS[TX] by clearing IMSC[TX] bit
         Otherwise, the MIS[TX] will never disappear and the execution will dead loop in the IRQ handling.
-        It can also be viewed as some kind of acknoledgement of the single-char trasmission completion.        
+        It can also be viewed as some kind of acknoledgement of the single-char trasmission completion.
         */
         *(up->base + IMSC) = *(up->base + IMSC) & (~TX_BIT);
         up->txon = 0; // turn off txon flag
@@ -167,13 +163,13 @@ void do_tx(UART *up)
     If the UART experienced some delay, and the chars keep coming in for UART to transmit,
     the outbuf will hold the yet-to-transmit chars, and the up->txon will remain 1.
     And we just keep getting data from the up->outbuf[] and write the char to UDR.
-    
+
     Is it possible that a char in UART hasn't got chance to be fully transmitted but overwritten 
     by a new char from the up-outbuf[]?
     No, we don't need to worry about that.
     Because according to the PL011 spec, the TX interrupt will be raised *after* the single-char is transmitted.
     So once we are here in do_tx(), we are safe to write another char into UDR.
-    
+
     Actually, most output devices raise interrupts *after* output is done.
     So the lesson is, we just need to be careful about the timing of the interrupt!
 
