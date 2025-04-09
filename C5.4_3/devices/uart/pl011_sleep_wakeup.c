@@ -48,7 +48,7 @@ void uart_init_single_tf_m(UART *up, u32 uart_base, struct uart_pl011_dev_t *pl0
     
     // uart_pl011_init(&pl011_dev, 115200);
     uart_pl011_enable(pl011_dev);
-    uart_pl011_disable_fifo(pl011_dev);
+    uart_pl011_enable_fifo(pl011_dev);
     uart_pl011_enable_intr(pl011_dev, (RX_BIT | TX_BIT));
     // *(up->base + CNTL) &= ~0x10; // disable UART FIFO
     // *(up->base + IMSC) |= (RX_BIT | TX_BIT);  // enable TX and RX interrupts for UART
