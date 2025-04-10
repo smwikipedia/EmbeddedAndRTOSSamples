@@ -33,6 +33,9 @@ use below command in another Linux terminal window to connect to the QEMU uart:
 
 "telnet 127.0.0.1 1124"
 
+The QEMU gdbserver started with "-s" is NOT connectable with "target remote :1234" command in gdb client
+until above telnet step is finished. -- Be advised!
+
 Previously, due to the unfair task scheduling which is soley based on priority, and the incorrect
 implemenation of echo back, the telnet UART window didn't show output properly.
 
