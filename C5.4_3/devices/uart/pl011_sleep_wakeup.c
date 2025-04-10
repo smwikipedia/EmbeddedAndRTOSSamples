@@ -19,26 +19,6 @@ It seems QEMU automatically uses default value for baud rate resgiers.
 So we don't do it here.
 This is not correct for UART in real hardware.
 */
-void uart_init_single(UART *up, u32 uart_base)
-{
-    u32 i;
-    up->base = (u8*)uart_base;
-    *(up->base + CNTL) &= ~0x10; // disable UART FIFO
-    *(up->base + IMSC) |= (RX_BIT | TX_BIT);  // enable TX and RX interrupts for UART
-    up->indata = up->inhead = up->intail = 0;
-    up->inroom = SBUFSIZE;
-    up->outdata = up->outhead = up->outtail = 0;
-    up->outroom = SBUFSIZE;
-    up->wrap = FALSE;
-    up->txon = 0;
-
-    for (i=0; i<SBUFSIZE; i++)
-    {
-        up->inbuf[i] = 0;
-        up->outbuf[i] = 0;
-    }
-}
-
 void uart_init_single_tf_m(UART *up, u32 uart_base)
 {
     u32 i;
@@ -96,10 +76,11 @@ void uart_init_single_tf_m(UART *up, u32 uart_base)
 // }
 
 
-void do_rx(UART *up)
+void do_rx_tf_m(UART *up)
 {
     char c;
-    c = *(up->base + UDR);
+    // c = *(up->base + UDR);
+    uart_pl011_read(up->p_pl011_dev, &c);
 
     up->inbuf[up->inhead++] = c;
     up->inhead %= SBUFSIZE; //circular buffer
@@ -134,6 +115,7 @@ void do_rx(UART *up)
 
 }
 
+
 /*
 According to the PL011 spec:
 If the FIFOs are disabled (have a depth of one location) and there is no data
@@ -141,7 +123,7 @@ present in the transmitters single location, the transmit interrupt is asserted 
 It is cleared by performing a single write to the transmit FIFO, or by clearing the
 interrupt.
 */
-void do_tx(UART *up)
+void do_tx_tf_m(UART *up)
 {
     u8 c;
     /*
@@ -154,7 +136,8 @@ void do_tx(UART *up)
         Otherwise, the MIS[TX] will never disappear and the execution will dead loop in the IRQ handling.
         It can also be viewed as some kind of acknoledgement of the single-char trasmission completion.
         */
-        *(up->base + IMSC) = *(up->base + IMSC) & (~TX_BIT);
+        // *(up->base + IMSC) = *(up->base + IMSC) & (~TX_BIT);
+        uart_pl011_disable_intr(up->p_pl011_dev, UART_PL011_TX_INTR_MASK);
         up->txon = 0; // turn off txon flag
         return;
     }
@@ -192,19 +175,24 @@ void do_tx(UART *up)
     This line should be a last action.
     Because the metadata change like above 2 lines should be finished before the TX IRQ is triggered.
     */
-    *(up->base + UDR) = (u32)c;
+    // *(up->base + UDR) = (u32)c;
+    uart_pl011_write(up->p_pl011_dev, c);
 }
+
 
 void uart_handler(UART *up)
 {
-    u8 mis = *(up->base + MIS); //read MIS register
+    // u8 mis = *(up->base + MIS); //read MIS register
+    u8 mis = uart_pl011_get_masked_intr_status(up->p_pl011_dev);
     if (mis & RX_BIT)
     {
-        do_rx(up);
+        // do_rx(up);
+        do_rx_tf_m(up);
     }
     else if (mis & TX_BIT)
     {
-        do_tx(up);
+        // do_tx(up);
+        do_tx_tf_m(up);
     }
     else
     {
@@ -332,7 +320,8 @@ void uputc(UART *up, u8 c)
     */
     up->txon = 1; // this line should precede the next line to ensure up-txon correctly reflect the status of TX interrupt.
 
-    *(up->base + IMSC) |= (RX_BIT | TX_BIT);
+    // *(up->base + IMSC) |= (RX_BIT | TX_BIT);
+    uart_pl011_enable_intr (up->p_pl011_dev, UART_PL011_RX_INTR_MASK | UART_PL011_TX_INTR_MASK);
 
     /*
     Write the char data into the data register.
@@ -344,7 +333,8 @@ void uputc(UART *up, u8 c)
     After the UART hardware transmitted this single char, the MIS[TX] bit will be signaled with value 1!
     We just rely on the hardware...
     */
-    *(up->base + UDR) = (u32)c;
+    // *(up->base + UDR) = (u32)c;
+    uart_pl011_write(up->p_pl011_dev, c);
 }
 
 void ugets(UART *up, char *s)
