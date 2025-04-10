@@ -38,6 +38,9 @@ we may only need change these base addresses.
 //string buffer size
 #define SBUFSIZE 50
 
+/* Default UART baud rate */
+#define DEFAULT_UART_BAUDRATE 115200
+
 /*
 outdata: how many chars in outbuf to be transmitted
 outroom: how much room remaining in outbuf

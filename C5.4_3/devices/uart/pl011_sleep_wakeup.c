@@ -311,9 +311,10 @@ void uputc(UART *up, u8 c)
         return;
     }
     //u32 i = *(up->base + UFR); // why do this?
-    while (*(up->base + UFR) & TXFF)
-        ; // if the tx holding register is full, busy wait
+    // while (*(up->base + UFR) & TXFF)
+    //     ; // if the tx holding register is full, busy wait
 
+    while (!uart_pl011_is_writable(up->p_pl011_dev));
     /*
     The action sequence is:
     Step 1. Update this program's knowledge about the UART state by setting the up->txon=1 to indicate that UART is busy trasmitting. 

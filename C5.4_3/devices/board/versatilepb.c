@@ -26,6 +26,11 @@ void uart_init()
         uart[i].p_pl011_dev = &pl011_dev[i];
         pl011_dev[i].cfg = &pl011_cfg[i];
         pl011_dev[i].data = &pl011_data[i];
+
+        pl011_cfg[i].def_baudrate = DEFAULT_UART_BAUDRATE;
+        pl011_cfg[i].def_wlen = UART_PL011_WLEN_8;
+        pl011_cfg[i].def_parity = UART_PL011_PARITY_DISABLED;
+        pl011_cfg[i].def_stopbit = UART_PL011_STOPBIT_1;
     }
 
     kprintf("uart_init() with tf_m driver\n");
