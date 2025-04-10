@@ -13,6 +13,9 @@ Base addresses of 4 UARTs on versatilepb board.
 #define MAX_UART_NUMBER 4
 #define MAX_TIMER_NUMBER 4
 
+// copied from TF-M codebase
+// platform/ext/target/arm/corstone1000/Device/Source/system_core_init.c
+#define  VERSATILEPB_PL011_CLOCK   (50000000UL)
 
 /*
 VIC for versatilepb 

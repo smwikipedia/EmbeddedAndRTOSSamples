@@ -1,6 +1,10 @@
 #ifndef VERSATILEPB_H
 #define VERSATILEPB_H
 
+/*
+This file serve as a HAL (Hadware Abstraction Layer) for the vertailpb board.
+*/
+
 
 /*
 Base addresses of 4 UARTs on versatilepb board.
