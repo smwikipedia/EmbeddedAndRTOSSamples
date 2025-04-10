@@ -23,6 +23,7 @@ void uart_init()
 {
     for(u32 i=0; i<MAX_UART_NUMBER; i++)
     {
+        uart[i].p_pl011_dev = &pl011_dev[i];
         pl011_dev[i].cfg = &pl011_cfg[i];
         pl011_dev[i].data = &pl011_data[i];
     }
@@ -35,12 +36,12 @@ void uart_init()
         if(i != 3)
         {// uart 0 ~ 2 are adjacent
             // uart_init_single(up, VERSATILEPB_PL011_UART0 + i * 0x1000);
-            uart_init_single_tf_m(up, VERSATILEPB_PL011_UART0 + i * 0x1000, &pl011_dev[i]);
+            uart_init_single_tf_m(up, VERSATILEPB_PL011_UART0 + i * 0x1000);
         }
         else
         {// uart 3 is different
             // uart_init_single(up, VERSATILEPB_PL011_UART3);
-            uart_init_single_tf_m(up, VERSATILEPB_PL011_UART3, &pl011_dev[i]);
+            uart_init_single_tf_m(up, VERSATILEPB_PL011_UART3);
         }
     }
 }

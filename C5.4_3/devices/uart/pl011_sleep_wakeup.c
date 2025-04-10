@@ -39,11 +39,12 @@ void uart_init_single(UART *up, u32 uart_base)
     }
 }
 
-void uart_init_single_tf_m(UART *up, u32 uart_base, struct uart_pl011_dev_t *pl011_dev)
+void uart_init_single_tf_m(UART *up, u32 uart_base)
 {
     u32 i;
-    up->base = (u8*)uart_base;
+    struct uart_pl011_dev_t *pl011_dev = up->p_pl011_dev;
 
+    up->base = (u8*)uart_base;
     pl011_dev->cfg->base = uart_base;
     
     uart_pl011_init(pl011_dev, VERSATILEPB_PL011_CLOCK);

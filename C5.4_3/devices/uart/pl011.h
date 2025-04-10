@@ -67,11 +67,12 @@ typedef volatile struct uart {
     u32 outdata, outroom, outhead, outtail;
     boolean wrap;
     volatile u32 txon;  // 1 = TX interrput is on, the UART is in transmitting state
+    struct uart_pl011_dev_t *p_pl011_dev;
 } UART;
 
 //void uart_init();
 void uart_init_single(UART *up, u32 uart_base);
-void uart_init_single_tf_m(UART *up, u32 uart_base, struct uart_pl011_dev_t *pl011_dev);
+void uart_init_single_tf_m(UART *up, u32 uart_base);
 void uart_handler(UART *up);
 void uprints(UART *up, u8 *s);
 void ugets(UART *up, char *s);
