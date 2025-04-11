@@ -6,6 +6,11 @@ https://github.com/TrustedFirmware-M/trusted-firmware-m/tree/main/platform/ext/t
 
 My purpose is to less the burden of device driver development and focus on OS itself.
 
+Bug:
+1. when input into the UART and press enter quickly, the LCD display may dead loop and no chance for input.
+
+
+
 Below is the ReadMe for C5.4_2 just for convenience.
 
 This sample allocated 2 tasks with kfork().
