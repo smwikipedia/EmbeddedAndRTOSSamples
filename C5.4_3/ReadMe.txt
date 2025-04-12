@@ -10,6 +10,18 @@ Bug:
 1. when input into the UART and press enter quickly, the LCD display may dead loop and no chance for input.
 This bug doesn't show up in C5.4_2, and I feel the C5.4_3 uart handling is a bit slower than C5.4_2.
 Maybe something I changed in C5.4_3 caused this bug.
+Checked KC Wang's book $3.6.1 about the PL011 on QEMU Versatile board, it says I don't need to write a divisor value
+to the baud rate regsiter for a desired baud rate. And I don't need to write to the line control register to specify
+the bits per char and parity. So I only keep below line in the `uart_pl011_init()`.
+
+```
+    _uart_pl011_enable_fifo(p_uart);
+
+    dev->data->state = UART_PL011_INITIALIZED;
+```
+
+And it seems the probability of dead loop get reduced. But still exists.
+
 
 
 
