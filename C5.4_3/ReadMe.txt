@@ -8,6 +8,8 @@ My purpose is to less the burden of device driver development and focus on OS it
 
 Bug:
 1. when input into the UART and press enter quickly, the LCD display may dead loop and no chance for input.
+This bug doesn't show up in C5.4_2, and I feel the C5.4_3 uart handling is a bit slower than C5.4_2.
+Maybe something I changed in C5.4_3 caused this bug.
 
 
 
