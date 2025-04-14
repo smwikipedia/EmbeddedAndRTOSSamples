@@ -22,6 +22,8 @@ the bits per char and parity. So I only keep below line in the `uart_pl011_init(
 
 And it seems the probability of dead loop get reduced. But still exists.
 
+2. Today, I reproduced the same bug in C5.4_2. So this bug is probably not related to TF_M API porting.
+
 
 
 
