@@ -352,8 +352,9 @@ We just kick start the PL011 transmission by writing the first byte to its data 
 and then the isr do_tx_tf_m() will automatically collect data from output buffer and transmit it.
 If some time during this process, the output buffer becomes empty, the isr do_tx_tf_m() will
 set the txon=0. And the upper half code, i.e. uputc() will kick start again by directly writing
-to the PL011 data register.
-The whole process is so delicate and fascinating, isn't it!
+to the PL011 data register. The whole process is self-adaptive.
+
+This is so delicate and fascinating, isn't it!
 
 And to understand the whole process, txon is the key!
 */
