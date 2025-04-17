@@ -215,24 +215,19 @@ u8 kgetc() // return a char from keyboard in sleep/wakeup paradigm
     The return always happen in the else clause.
     If there's no while loop, the function will finish in the if clause with a random return value.
     */
-    while(1)
+    lock();
+    if(kp->data == 0)
     {
+        unlock();
+        ksleep((u32)&kbd);
         lock();
-        if(kp->data == 0)
-        {
-            unlock();
-            ksleep((u32)&kbd);
-        }
-        else
-        {
-            c = kp->buf[kp->tail++];
-            kp->tail %= MAX_KBD_CHAR_BUFFER_SIZE;
-            kp->data--;
-            kp->room = MAX_KBD_CHAR_BUFFER_SIZE - kp->data;
-            unlock();
-            return c;
-        }
     }
+    c = kp->buf[kp->tail++];
+    kp->tail %= MAX_KBD_CHAR_BUFFER_SIZE;
+    kp->data--;
+    kp->room = MAX_KBD_CHAR_BUFFER_SIZE - kp->data;
+    unlock();
+    return c;
 }
 
 u32 kgets(u8 s[]) // get a string from KBD
@@ -246,8 +241,8 @@ u32 kgets(u8 s[]) // get a string from KBD
         // max char size is (MAX_KBD_CHAR_BUFFER_SIZE - 1), reserve one char for the ending '\0'.
         nextCharPosition = nextCharPosition % (MAX_KBD_CHAR_BUFFER_SIZE - 1);
     }
-    s[nextCharPosition++] = '\n';
     s[nextCharPosition++] = '\r';
+    s[nextCharPosition++] = '\n';
     s[nextCharPosition] = 0;
     return strlen(s);
 }

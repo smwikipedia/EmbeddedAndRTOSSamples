@@ -15,8 +15,8 @@ extern void tswitch();
 // in KC Wang's book, below 2 functions are named int_off, int_on
 // but it has nothing to do with interrupt
 // so I changed the names and implementation
-extern u32 get_cpsr(void);
-extern void set_cpsr(u32 cpsr);
+extern u32 int_off(void);
+extern void int_on(u32 cpsr);
 
 void ksleep(u32 event);
 void kwakeup(u32 event);
@@ -102,7 +102,7 @@ u32 kernel_init()
 
 void scheduler()
 {
-    kprintf("proc %d in scheduler\n", running->pid);
+    // kprintf("proc %d in scheduler\n", running->pid);
     switch (running->status)
     {
         case READY: // if the running is still ready, enqueue it for next slice.
@@ -117,10 +117,10 @@ void scheduler()
             ASSERT(FALSE);
             break; // won't reach here.
     }
-        
+
+    // printAll();
     running = dequeue(&readyQueue); // there should be other tasks to run, otherwise, the proc[0] is always in the readyQueue to run.
-    kprintf("next running = %d\n", running->pid);
-    printAll();   
+    // kprintf("next_running = %d\n", running->pid);
 }
 
 void timer_task()
@@ -133,8 +133,8 @@ void uart_task()
     u8 line[MAX_KBD_CHAR_BUFFER_SIZE]; // just borrow the macro from kbd
     while(1)
     {
-        kprintf("UART0 task %d running\n", running->pid);
-        kprintf("UART0 task %d sleep for a line from remote serial port...\n", running->pid);
+        // kprintf("UART0 task %d running\n", running->pid);
+        // kprintf("UART0 task %d sleep for a line from remote serial port...\n", running->pid);
         /*
         KC Wang's book has below line.
         But I think a task shouldn't go to sleep so explicitly.
@@ -146,6 +146,9 @@ void uart_task()
         // kprintf("-----> %d\n", uart[0].indata);
         ugets(&uart[0], line);
         kprintf("UART0 task %d get this: %s", running->pid, line);
+        // for (u32 i = 0; i < MAX_KBD_CHAR_BUFFER_SIZE; i++) {
+        //     kprintf("0x%x ", line[i]);
+        // }
         uprints(&uart[0], "UART0 task get this:");
         uprints(&uart[0], line);
     }
@@ -179,15 +182,17 @@ void ksleep(u32 event)
 {
     // in KC Wang's book, below line is int_off()
     // but the sematic has nothing to do with interrupt, so I change the name
-    u32 old_cpsr = get_cpsr();
+    u32 old_cpsr = int_off();
     running->event = event;
     running->status = SLEEP;
+    // kprintf("\n+++\n");
     // Current task calls ksleep() to fall asleep. So it's reasonable to do a task switch.
     tswitch(); // This is one of the time point to call tswitch(). Carefully chose the point.
+    // kprintf("4444\n");
     
     // in KC Wang's book, below line is int_on()
     // but the sematic has nothing to do with interrupt, so I change the name
-    set_cpsr(old_cpsr);
+    int_on(old_cpsr);
 }
 
 /*
@@ -197,7 +202,7 @@ And maintain the sleep queue by priority.
 */
 void kwakeup(u32 event)
 {
-    u32 old_cpsr = get_cpsr();
+    u32 old_cpsr = int_off();
     
     PROC *current = NULL;
     PROC *previous = NULL;
@@ -229,7 +234,7 @@ void kwakeup(u32 event)
         }
     }
     
-    set_cpsr(old_cpsr);
+    int_on(old_cpsr);
 }
 
 u32 main()
@@ -268,6 +273,7 @@ u32 main()
         //we are on proc[0]'s stack
         if (readyQueue != NULL)
         {
+            // kprintf("\n-+-+-+-\n");
             /*
             proc[0] will yield its execution.
             The stack will change to the new task's. Though it may still be the old switched-out one.
@@ -277,7 +283,7 @@ u32 main()
             */
             tswitch(); // This is one of the tswitch() point, carefully choose the point.
 
-            kprintf("\n.....");
+            // kprintf("\n...t0...\n");
         }
         // Still busy loop here...
         // if uncomment below line, there'll be endless printing

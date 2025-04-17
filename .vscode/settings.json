@@ -1,6 +1,10 @@
 {
     "files.associations": {
-        "types.h": "c"
+        "types.h": "c",
+        "uart_pl011_drv copy": "c",
+        "uart_pl011_drv.h": "c",
+        "versatilepb.h": "c",
+        "pl011.h": "c"
     },
     "files.exclude": {
         "**/.git": true,

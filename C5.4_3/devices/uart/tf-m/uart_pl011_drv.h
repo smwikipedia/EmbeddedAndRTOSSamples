@@ -286,6 +286,67 @@ struct uart_pl011_dev_t {
                                               /*!< UART PL011 data */
 };
 
+
+/**
+ * \brief UART PL011 register map structure
+ */
+struct _uart_pl011_reg_map_t {
+     volatile uint32_t uartdr;          /*!< Offset: 0x000 (R/W) Data register */
+     union {
+         volatile uint32_t uartrsr;
+                 /*!< Offset: 0x004 (R/ ) Receive status register */
+         volatile uint32_t uartecr;
+                 /*!< Offset: 0x004 ( /W) Error clear register */
+     };
+     volatile uint32_t reserved_0[4];   /*!< Offset: 0x008-0x014 Reserved */
+     volatile uint32_t uartfr;          /*!< Offset: 0x018 (R/ ) Flag register */
+     volatile uint32_t reserved_1;      /*!< Offset: 0x01C       Reserved */
+     volatile uint32_t uartilpr;
+                 /*!< Offset: 0x020 (R/W) IrDA low-power counter register */
+     volatile uint32_t uartibrd;
+                 /*!< Offset: 0x024 (R/W) Integer baud rate register */
+     volatile uint32_t uartfbrd;
+                 /*!< Offset: 0x028 (R/W) Fractional baud rate register */
+     volatile uint32_t uartlcr_h;
+                 /*!< Offset: 0x02C (R/W) Line control register */
+     volatile uint32_t uartcr;
+                 /*!< Offset: 0x030 (R/W) Control register */
+     volatile uint32_t uartifls;
+                 /*!< Offset: 0x034 (R/W) Interrupt FIFO level select register */
+     volatile uint32_t uartimsc;
+                 /*!< Offset: 0x038 (R/W) Interrupt mask set/clear register */
+     volatile uint32_t uartris;
+                 /*!< Offset: 0x03C (R/ ) Raw interrupt status register */
+     volatile uint32_t uartmis;
+                 /*!< Offset: 0x040 (R/ ) Masked interrupt status register */
+     volatile uint32_t uarticr;
+                 /*!< Offset: 0x044 ( /W) Interrupt clear register */
+     volatile uint32_t uartdmacr;
+                 /*!< Offset: 0x048 (R/W) DMA control register */
+     volatile uint32_t reserved_2[13];  /*!< Offset: 0x04C-0x07C Reserved */
+     volatile uint32_t reserved_3[4];
+                 /*!< Offset: 0x080-0x08C Reserved for test purposes */
+     volatile uint32_t reserved_4[976]; /*!< Offset: 0x090-0xFCC Reserved */
+     volatile uint32_t reserved_5[4];
+                 /*!< Offset: 0xFD0-0xFDC Reserved for future ID expansion */
+     volatile uint32_t uartperiphid0;
+                 /*!< Offset: 0xFE0 (R/ ) UARTPeriphID0 register */
+     volatile uint32_t uartperiphid1;
+                 /*!< Offset: 0xFE4 (R/ ) UARTPeriphID1 register */
+     volatile uint32_t uartperiphid2;
+                 /*!< Offset: 0xFE8 (R/ ) UARTPeriphID2 register */
+     volatile uint32_t uartperiphid3;
+                 /*!< Offset: 0xFEC (R/ ) UARTPeriphID3 register */
+     volatile uint32_t uartpcellid0;
+                 /*!< Offset: 0xFF0 (R/ ) UARTPCellID0 register */
+     volatile uint32_t uartpcellid1;
+                 /*!< Offset: 0xFF4 (R/ ) UARTPCellID1 register */
+     volatile uint32_t uartpcellid2;
+                 /*!< Offset: 0xFF8 (R/ ) UARTPCellID2 register */
+     volatile uint32_t uartpcellid3;
+                 /*!< Offset: 0xFFC (R/ ) UARTPCellID3 register */
+ };
+
 /**
  * \brief Initializes UART PL011.
  *

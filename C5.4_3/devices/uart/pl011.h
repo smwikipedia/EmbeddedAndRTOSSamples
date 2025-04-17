@@ -34,6 +34,7 @@ we may only need change these base addresses.
 //RX TX bits in IMSC and MIS registers
 #define RX_BIT (1<<4) // RX interrupt mask bit in IMSC register, also RX interrupt status bit in MIS register.
 #define TX_BIT (1<<5) // TX interrupt mask bit in IMSC register, also TX interrupt status bit in MIS register.
+#define RT_BIT (1<<6) // RT interrupt mask bit in IMSC register, also TX interrupt status bit in MIS register.
 
 //string buffer size
 #define SBUFSIZE 50
@@ -41,35 +42,28 @@ we may only need change these base addresses.
 /* Default UART baud rate */
 #define DEFAULT_UART_BAUDRATE 115200
 
-/*
-outdata: how many chars in outbuf to be transmitted
-outroom: how much room remaining in outbuf
-outhead: the latest char buffered
-outtail: the next char to be transmitted
-
-logically, outhead is ahead of outtail
-
-**************************************************  outbuf[]
-              ^                     ^
-              |                     |
-(start)     outtail                outhead     (end)
-
-
-**************************************************  inbuf[]
-              ^                     ^
-              |                     |
-(start)     intail                inhead       (end)
-
-*/
 typedef volatile struct uart {
-    u8 * base;    // base address of UART
+    u8 * base;      // base address of UART
     u32 n;          // uart id 0~3
     u8 inbuf[SBUFSIZE];
+
+    // indata: amount of data in inbuf
+    // inroom: amount of room in inbuf
+    // inhead: next free location in inbuf
+    // intail: first data to read from inbuf
     u32 indata, inroom, inhead, intail;
     u8 outbuf[SBUFSIZE];
+
+    // outdata: amount of data in outbuf
+    // outroom: amount of room in outbuf
+    // outhead: next free location in outbuf
+    // outtail: first data to output from outbuf
     u32 outdata, outroom, outhead, outtail;
-    boolean wrap;
-    volatile u32 txon;  // 1 = TX interrput is on, the UART is in transmitting state
+
+    // txon==0: the output buffer is empty
+    // txon==1: the output buffer is not empty
+    volatile u32 txon;
+
     struct uart_pl011_dev_t *p_pl011_dev;
 } UART;
 

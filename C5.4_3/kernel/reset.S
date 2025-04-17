@@ -9,7 +9,7 @@
 // in KC Wang's book, below 2 functions are named int_off, int_on
 // but it has nothing to do with interrupt
 // so I changed the names and implementation
-.global get_cpsr, set_cpsr//int_off, int_on // get and set the CPSR
+.global int_off, int_on//int_off, int_on // get and set the CPSR
 
 reset_handler:
     // The ARM processor enters SVC mode when turned on, reset or executing SWI instruction.
@@ -136,17 +136,17 @@ unlock: // enable IRQ interrupts
 // in KC Wang's book, below function is named int_off
 // but it has nothing to do with interrupt
 // so I changed the name and implementation
-get_cpsr: // only return CPSR
+int_off: // only return CPSR
     MRS r1, cpsr // load cpsr into r1
     MOV r0, r1 // store cpsr in r0 as the return value
-    //ORR r1, r1, #0x80 // set IRQ mask bit  // maybe we don't need to care about interrupt here.
-    //MSR cpsr, r1 // disable interrupt
+    ORR r1, r1, #0x80 // set IRQ mask bit  // maybe we don't need to care about interrupt here.
+    MSR cpsr, r1 // disable interrupt
     MOV pc, lr  // return by put lr into pc, lr (= old pc-4) is the next instruction to execute
 
 // in KC Wang's book, below function is named int_on
 // but it has nothing to do with interrupt
 // so I changed the name and implementation
-set_cpsr: //restore original CPSR, void int_on(u32 CPSR)
+int_on: //restore original CPSR, void int_on(u32 CPSR)
     MSR cpsr, r0 // parameter 1 is passed through r0
     MOV pc, lr
 

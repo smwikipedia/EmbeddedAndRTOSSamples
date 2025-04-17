@@ -12,6 +12,15 @@ extern void kwakeup(u32 event);
 
 void uputc(UART *up, u8 c);
 
+void uart_dump(UART *up)
+{
+    struct _uart_pl011_reg_map_t* p_uart =
+        (struct _uart_pl011_reg_map_t*)up->p_pl011_dev->cfg->base;
+    kprintf("uart%d dump:\n", up->n);
+    kprintf(" uartlcr_h=0x%x\n",  p_uart->uartlcr_h);
+    kprintf(" uartifls=0x%x\n",  p_uart->uartifls);
+}
+
 /*
 Initialize a single UART.
 Note that below code only works on QEMU ARM versatilepb board.
@@ -28,18 +37,27 @@ void uart_init_single_tf_m(UART *up, u32 uart_base)
     pl011_dev->cfg->base = uart_base;
     
     uart_pl011_init(pl011_dev, VERSATILEPB_PL011_CLOCK);
+
+    /*
+    The fifo mode is ignored in QEMU PL011 model.
+    So you won't see FIFO effect even with below fifl level config.
+    ref:
+    https://electronics.stackexchange.com/questions/744012/pl011-uart-missing-receiving-data-in-fifo-mode
+    https://balau82.wordpress.com/2010/02/28/hello-world-for-bare-metal-arm-using-qemu/
+    */
+    uart_pl011_set_rx_fifo_lvl(pl011_dev, UART_PL011_RX_FIFO_LVL_1_2);
+    uart_pl011_set_tx_fifo_lvl(pl011_dev, UART_PL011_TX_FIFO_LVL_1_2);
+
     uart_pl011_enable_intr(pl011_dev, (RX_BIT | TX_BIT));
     uart_pl011_enable(pl011_dev);
-    // *(up->base + CNTL) &= ~0x10; // disable UART FIFO
-    // *(up->base + IMSC) |= (RX_BIT | TX_BIT);  // enable TX and RX interrupts for UART
-
+    uart_dump(up);
 
     up->n = i; //UART ID
     up->indata = up->inhead = up->intail = 0;
     up->inroom = SBUFSIZE;
     up->outdata = up->outhead = up->outtail = 0;
     up->outroom = SBUFSIZE;
-    up->wrap = FALSE;
+    // up->wrap = FALSE;
     up->txon = 0;
 
     for (i=0; i<SBUFSIZE; i++)
@@ -49,134 +67,163 @@ void uart_init_single_tf_m(UART *up, u32 uart_base)
     }
 }
 
+/*
+According to the PL011 3.4.2 URATRXINTR:
 
-// void uart_init()
-// {
-//     u32 i;
-//     UART *up;
-//     for(i=0; i<MAX_UART_NUMBER; i++){
-//         up = &uart[i];
-//         if(i != 3)
-//         {// uart 0 ~ 2 are adjacent
-//             up->base = (char *)(PL011_UART0_BASE + i * 0x1000); 
-//         }
-//         else
-//         {// uart 3 is different
-//             up->base = (char *)(PL011_UART3_BASE);                   
-//         }        
-//         *(up->base + CNTL) &= ~0x10; // disable UART FIFO
-//         *(up->base + IMSC) |= (RX_BIT | TX_BIT);  // enable TX and RX interrupts for UART
-//         up->n = i; //UART ID
-//         up->indata = up->inhead = up->intail = 0;
-//         up->inroom = SBUFSIZE;
-//         up->outdata = up->outhead = up->outtail = 0;
-//         up->outroom = SBUFSIZE;
-//         up->txon = 0;
-//     }
-// }
+The receive interrupt changes state when one of the following events occurs:
+- If the FIFOs are enabled and the receive FIFO reaches the programmed trigger 
+level. When this happens, the receive interrupt is asserted HIGH. The receive 
+interrupt is cleared by reading data from the receive FIFO until it becomes less 
+than the trigger level, or by clearing the interrupt.
+- If the FIFOs are disabled (have a depth of one location) and data is received 
+thereby filling the location, the receive interrupt is asserted HIGH. The receive 
+interrupt is cleared by performing a single read of the receive FIFO, or by clearing 
+the interrupt.
 
 
+The xinu code said: (https://github.com/xinu-os/xinu/blob/master/device/uart-pl011/uartInterrupt.c)
+If FIFOs are enabled, this happens when the amount of data in the receive FIFO is greater
+than or equal to the programmed trigger level.  If FIFOs are
+disabled, this happens when the Rx holding register was filled
+with one byte. 
+
+So the two descrptions above are a bit different.
+Since QEMU PL011 ignores the FIFO mode, I cannot get a definite answer.
+I will try on a real board and get back.
+
+----------
+
+This function:
+Collect chars from hw fifo into the sw inbuf
+
+Read bytes from the receive FIFO until it is empty again.  (If
+FIFOs are disabled, the Rx holding register acts as a FIFO of
+size 1, so the code still works.)
+
+In the xinu implementation,
+https://github.com/xinu-os/xinu/blob/master/device/uart-pl011/uartInterrupt.c
+it keeps reading the char from UART data register (fifo or not), and put into the input buffer
+if theres space in the input buffer.
+If the input buffer is full, still read char from the UART but simply ignore it and keep some statistics.
+
+In my implmemeation, for simplicity, just drain the FIFO and collect everything into the input buffer.
+Allow overrun in the input buffer. And keep no statistics.
+
+*/
 void do_rx_tf_m(UART *up)
 {
     char c;
-    // c = *(up->base + UDR);
-    uart_pl011_read(up->p_pl011_dev, &c);
 
-    up->inbuf[up->inhead++] = c;
-    up->inhead %= SBUFSIZE; //circular buffer
+    // just drain data from RX FIFO and put it into input buffer,
+    // wake up a process when '\r', but the process is not scheduled until ISR finishes,
+    // when FIFO is drained, the UARTRXINTR will be automatically cleared, we don't need to clear it.
+    // when the FIFO is drained, the input buffer will faithfully contain what's received.
+    do {
+        // always put the read char into the input buffer
+        // do not check for room, allow overrun in the input buffer
+        uart_pl011_read(up->p_pl011_dev, &c);
+        // kprintf("=1= inhead=%d, intail=%d, indata=%d, inroom=%d\n", up->inhead, up->intail, up->indata, up->inroom);
+        up->inbuf[up->inhead++] = c;
+        up->inhead %= SBUFSIZE; //circular buffer
 
-    if (up->wrap) {
-        up->intail = up->inhead;
-    }
+        // this is the old indata
+        if (up->indata < SBUFSIZE) {
+            // inhead and intail must be different before accepting the new c
+            up->indata++;
+            up->inroom--;
+        } else {
+            up->indata = SBUFSIZE;
+            up->inroom = 0;
+            // intail is push forwad by inhead
+            // and one char is overrun
+            up->intail = up->inhead;
+        }
 
-    if (up->inhead == up->intail) {
-        up->wrap = TRUE;
-    }
+        // kprintf("=2= inhead=%d, intail=%d, indata=%d, inroom=%d\n", up->inhead, up->intail, up->indata, up->inroom);
+        // echo immediately to LCD, LCD doesn't involve interrupt
+        kprintf("%c", c);
 
-    if(up->inroom > 0) {
-        up->indata++;           // a newly received char is buffered
-        up->inroom--;           // a newly received char is buffered
-    }
+        /*
+          do not echo back to UART at here.
+          echo in the uputc().
+          the logic will be simpler.
+        */
+        // uputc(up,c);  // This cause the endless dead loop!
 
-    uputc(up, c); // echo back to telnet client
-    kprintf("%c", c); // echo back to LCD
+        /*
+         shouldn't break here, keep draining the FIFO
+         the input buffer will faithfully contain what's received.
+        */
+        // if(c == '\r')
+        // {// '\r' is sent as a new line char
+        //     kwakeup((u32)up);
+        //     // break;
+        // }
+    } while (uart_pl011_is_readable(up->p_pl011_dev));
 
-
-    /*
-    Rasie event for line completion
-    Actually, I was thinking maybe it is inappropriate for kbd_handler() to wake up a task.
-    But in this experiment, we have no other parties can do this but the kbd_handler.
-    Maybe in future examples, we will have more interesting/realistic options.
-    */
-    if(c == '\r') // '\r' is sent as a new line char
-    {
-        kwakeup((u32)up);
-    }
-
+    // since we are in the tx isr, there must be something in FIFO,
+    // and now it must be in the inbuf,
+    // so we can wakeup the waiting proc.
+    kwakeup((u32)up);
 }
 
 
 /*
 According to the PL011 spec:
-If the FIFOs are disabled (have a depth of one location) and there is no data
-present in the transmitters single location, the transmit interrupt is asserted HIGH.
-It is cleared by performing a single write to the transmit FIFO, or by clearing the
+The transmit interrupt changes state when one of the following events occurs:
+- If the FIFOs are enabled and the transmit FIFO reaches the programmed trigger 
+level. When this happens, the transmit interrupt is asserted HIGH. The transmit 
+interrupt is cleared by writing data to the transmit FIFO until it becomes greater 
+than the trigger level, or by clearing the interrupt.
+- If the FIFOs are disabled (have a depth of one location) and there is no data 
+present in the transmitters single location, the transmit interrupt is asserted HIGH. 
+It is cleared by performing a single write to the transmit FIFO, or by clearing the 
 interrupt.
+
+To update the transmit FIFO you must:
+- Write data to the transmit FIFO, either prior to enabling the UART and the 
+interrupts, or after enabling the UART and interrupts.
+
+
+The xinu code said: (https://github.com/xinu-os/xinu/blob/master/device/uart-pl011/uartInterrupt.c)
+If FIFOs are enabled, this happens when the amount of data in the transmit FIFO is less than
+or equal to the programmed trigger level.  If FIFOs are disabled,
+this happens if the Tx holding register is empty.
+
+So the two descrptions above are a bit different.
+Since QEMU PL011 ignores the FIFO mode, I cannot get a definite answer.
+I will try on a real board and get back.
+
 */
 void do_tx_tf_m(UART *up)
 {
     u8 c;
-    /*
-    The up->txon will only return to 0 when the up->outbuf is empty.
-    */
-    if (up->outdata <= 0)
-    {
-        /*
-        Clear the MIS[TX] by clearing IMSC[TX] bit
-        Otherwise, the MIS[TX] will never disappear and the execution will dead loop in the IRQ handling.
-        It can also be viewed as some kind of acknoledgement of the single-char trasmission completion.
-        */
-        // *(up->base + IMSC) = *(up->base + IMSC) & (~TX_BIT);
-        uart_pl011_disable_intr(up->p_pl011_dev, UART_PL011_TX_INTR_MASK);
-        up->txon = 0; // turn off txon flag
-        return;
+
+    // clear the TX interrupt explicilty, not just mask it with uart_pl011_disable_intr()
+    /* Explicitly clear the transmit interrupt.  This is necessary
+     * because there may not be enough bytes in the output buffer to
+     * fill the FIFO greater than the transmit interrupt trigger level.
+     * If FIFOs are disabled, this applies if there are 0 bytes to
+     * transmit and therefore nothing to fill the Tx holding register
+     * with.
+     */
+    uart_pl011_clear_intr(up->p_pl011_dev, UART_PL011_TX_INTR_MASK);
+    if (up->outdata > 0) {
+        // get data from output buffer and put it into the TX FIFO
+        // until the output buffer is empty, or the TX FIFO is full
+        do {
+            c = up->outbuf[up->outtail++];
+            up->outtail %= SBUFSIZE;
+            up->outdata--;
+            up->outroom++;
+            // a buffered char is put into tx fifo
+            uart_pl011_write(up->p_pl011_dev, c);
+        } while(uart_pl011_is_writable(up->p_pl011_dev) && up->outdata > 0);
+    } else {
+        // nothing in output buffer
+        // PL011 nees another kick from the upper half code to start the transmission
+        up->txon = 0;
     }
-
-    /*
-    If the UART experienced some delay, and the chars keep coming in for UART to transmit,
-    the outbuf will hold the yet-to-transmit chars, and the up->txon will remain 1.
-    And we just keep getting data from the up->outbuf[] and write the char to UDR.
-
-    Is it possible that a char in UART hasn't got chance to be fully transmitted but overwritten 
-    by a new char from the up-outbuf[]?
-    No, we don't need to worry about that.
-    Because according to the PL011 spec, the TX interrupt will be raised *after* the single-char is transmitted.
-    So once we are here in do_tx(), we are safe to write another char into UDR.
-
-    Actually, most output devices raise interrupts *after* output is done.
-    So the lesson is, we just need to be careful about the timing of the interrupt!
-
-    */
-    c = up->outbuf[up->outtail++];
-    up->outtail %= SBUFSIZE;
-
-    /*
-    Write c to output data register, it will also clear the TX IRQ signal for this time according to the UART PL011 spec.
-    After the new c get transmitted, a new TX IRQ will be rasised.
-    And the new TX IRQ will trigger this do_tx() function *again*.
-    Each triggering of the do_tx() function will get a char from the up->outbuf[] until the up->outdata reaches 0.
-    Kind of like self-relaying.
-    I just give it a first move by uputc(), then the UART just keeps running by itself unitl no data to transmit.
-    */
-    up->outdata--; // a buffered char is transmitted
-    up->outroom++; // a buffered char is transmitted
-
-    /*
-    This line should be a last action.
-    Because the metadata change like above 2 lines should be finished before the TX IRQ is triggered.
-    */
-    // *(up->base + UDR) = (u32)c;
-    uart_pl011_write(up->p_pl011_dev, c);
 }
 
 
@@ -184,13 +231,40 @@ void uart_handler(UART *up)
 {
     // u8 mis = *(up->base + MIS); //read MIS register
     u8 mis = uart_pl011_get_masked_intr_status(up->p_pl011_dev);
+
+    /* Receive interrupt is asserted.  If FIFOs are enabled, this
+     * happens when the amount of data in the receive FIFO is greater
+     * than or equal to the programmed trigger level.  If FIFOs are
+     * disabled, this happens when the Rx holding register was filled
+     * with one byte.  */
     if (mis & RX_BIT)
     {
-        // do_rx(up);
+        // kprintf("RX int!\n");
         do_rx_tf_m(up);
     }
+
+    /*
+    If the FIFO is in effect, you should see a rx timeout interrupt (RT_BIT).
+    But fifo mode is ignored in QEMU PL011 model.
+    So below code won't be reached on QEMU versatilepb.
+    ref:
+    https://electronics.stackexchange.com/questions/744012/pl011-uart-missing-receiving-data-in-fifo-mode
+    https://balau82.wordpress.com/2010/02/28/hello-world-for-bare-metal-arm-using-qemu/
+    */
+    else if (mis & RT_BIT)
+    {
+        // kprintf("RT int!\n");
+        // do_rx_tf_m(up);
+    }
+
+    /* Transmit interrupt is asserted.  If FIFOs are enabled, this
+     * happens when the amount of data in the transmit FIFO is less than
+     * or equal to the programmed trigger level.  If FIFOs are disabled,
+     * this happens if the Tx holding register is empty.
+     */
     else if (mis & TX_BIT)
     {
+        // kprintf("TX int!\n");
         // do_tx(up);
         do_tx_tf_m(up);
     }
@@ -204,154 +278,139 @@ void uart_handler(UART *up)
 }
 
 /*
-do_rx() is responsible to collect incoming chars into up->inbuf[].
-This function just consume chars from the up->inbuf[].
+do_rx_tf_m() is responsible to collect incoming chars from hardware RX FIFO into inbuf[].
+This function just consume chars from the inbuf[].
+
+When updating the control variables in the upper-half of an interrupt-based device driver,
+we must ensure all the updating actions to the control variables are finished atomically.
+That is, it must not be interrupted. Otherwise there can be inconsistence.
+So we call lock() to disalbe IRQ for now.
+
+But in an interrupt handler(the lower-half), we don't need to worry about contention with the upper-half.
+Because we are sure that the upper-half has been interrupted and is not running.
+
+However, there's another issue.
+In this sample, the UART works in single-char mode.
+If the actions in upper-half take too long to finish, there can be >1 chars arriving at the UART hardware.
+But the IRQ is disabled during the upper-half processing.
+So the isr do_rx_tf_m() will not be invoked by the UART to collect the incoming chars in time.
+So it is possible that some char will be missed.
+And that is why there is a hardware FIFO buffer in the UART.
+
+In short, we need 2 buffers, one in software and one in hardware,
+to smoothly couple the hardware and software.
 */
 u8 ugetc(UART *up)
 {
     u8 c;
-    // while (up->indata <= 0)
-    //     ; // no data in buffer, just block!
-    // c = up->inbuf[up->intail];
-    // kprintf("-----%d\n", up->indata);
-
-    // The while loop is critical, it ensures a valid c is obtained from the uart inbuf.
-    // Similar to kgetc() in keyboard driver.
-    while(1)
+    lock();
+    if(up->indata == 0)
     {
-        lock();
-        if(up->indata <= 0)
-        {
-            unlock();
-            ksleep((u32)up); // task swich happens here!!
-        }
-        else
-        {
-            c = up->inbuf[up->intail];
-            up->intail++;
-            up->intail %= SBUFSIZE;
-            if (up->intail == up->inhead) {
-                up->wrap = FALSE;
-            }
-            up->indata--; // a buffered char is handled
-            // kprintf("%d,", up->indata);
-            up->inroom++; // a buffered char is handled
-            unlock();
-            return c;
-        }
-
+        // kprintf("indata=%d, must be 0\n", up->indata);
+        unlock();
+        ksleep((u32)up); // task switch happens here!!
     }
 
-    /*
-    When updating the control variables in the upper-half of an interrupt-based device driver,
-    we must ensure all the updating actions to the control variables are finished atomically.
-    That is, it must not be interrupted. Otherwise there can be inconsistence.
-    So we call lock() to disalbe IRQ for now.
+    // if reached here, ISR must have picked at least one char from the UART hw fifo into the sw inbuf.
+    // so up->indata must > 0
+    // kprintf("=3= inhead=%d, intail=%d, indata=%d, inroom=%d\n", up->inhead, up->intail, up->indata, up->inroom);
+    lock();
+    c = up->inbuf[up->intail];
+    up->intail++;
+    up->intail %= SBUFSIZE;
 
-    But in an interrupt handler(the lower-half), we don't need to worry about contention with the upper-half.
-    Because we are sure that the upper-half has been interrupted and is not running.
+    // because the indata must > 0, we can always do below
+    // and inroom has been taken good care of the rx isr
+    up->indata--;
+    up->inroom++;
+    unlock();
 
-    However, there's another issue.
-    In this sample, the UART works in single-char mode.
-    If the actions in upper-half take too long to finish, there can be >1 chars arriving at the UART.
-    But the IRQ is disabled during the upper-half processing.
-    So the do_rx() will not be invoked by the UART to collect the incoming chars in time.
-    So it is possible that some char will be missed.
-
-    And that is why there is a hardware FIFO buffer in the UART.
-
-    In short, we need 2 buffers, one in software and one in hardware,
-    to smoothly couple the hardware and software.
-
-    */
-
-    // below code will never execute
-    // lock();
-    // up->intail++;
-    // up->intail %= SBUFSIZE;
-    // up->indata--; // a buffered char is handled
-    // up->inroom++; // a buffered char is handled
-    // unlock();
-    // return c;
+    // uart echo back should be placed here,
+    // if placed in the do_rx_tf_m(), weird things will happen, such as deadloop.
+    // putting it here makes things simple
+    uputc(up,c);
+    return c;
 }
 
+
+/*
+Below code can write a char to 2 different destinaitions.
+When output buffer is empty (txon==0), we write one char to PL011 direfctly.
+When output buffer is not empty (txon==1), we write one char to output buffer.
+
+According to PL011 TRM,
+"Write data to the transmit FIFO, either prior to enabling the UART and the interrupts, 
+or after enabling the UART and interrupts."
+
+CPU is much faster than the PL011.
+The isr do_tx_tf_m() will set txon=0 when the the software output ring buffer is empty. (NOTE! it is not the hardware tx FIFO)
+When PL011 is sending a char, there may be many chars sent to uputc().
+They will be put into the output ring buffer.
+
+So the whole paradigm is:
+We just kick start the PL011 transmission by writing the first byte to its data regiser,
+and then the isr do_tx_tf_m() will automatically collect data from output buffer and transmit it.
+If some time during this process, the output buffer becomes empty, the isr do_tx_tf_m() will
+set the txon=0. And the upper half code, i.e. uputc() will kick start again by directly writing
+to the PL011 data register.
+The whole process is so delicate and fascinating, isn't it!
+
+And to understand the whole process, txon is the key!
+*/
 void uputc(UART *up, u8 c)
 {
-    /*
-    For the 1st char to ouput, the txon is 0.
-    During the UART transmission, the txon will be 1.
-    If for some reason, the UART hardware encounters some delay, even for transmitting a single char,
-    the cpu will still be running the uputs() -> uputc(), so the chars will just keep coming.
-    then newly incoming chars will be stored into up->outbuf[], and the up->txon will never be set to 0 in the do_tx().
-    So in this case, below code wil be executed.
-    It's just a software buffer to tolerate some potential hardware delays.
-    The buffer is the lubricant between software and hardware.
-    */
+
+    lock();
+    // up->txon is shared between upper half and bottom half
+    // so lock before use
     if (up->txon)
     {
-        up->outbuf[up->outhead] = c;
-        lock();
-        up->outhead++;
+        // always put new data into the ring buffer outbuf[]
+        // for simplicity, allow overrun
+        up->outbuf[up->outhead++] = c;
         up->outhead %= SBUFSIZE;
-        up->outdata++; // a new char is buffered
-        up->outroom--; // a new char is buffered
+
+        // this is the old outdata
+        if (up->outdata < SBUFSIZE) {
+            // outhead and outtail must be different before stuffing in the new c
+            // and we must be able to do below
+            up->outdata++;
+            up->outroom--;
+        } else {
+            up->outdata = SBUFSIZE;
+            up->outroom = 0;
+            // intail is push forwad by inhead
+            // and one char is overrun
+            // btw, this is very similar to the do_rx_tf_m()
+            up->outtail = up->outhead;
+        }
         unlock();
         return;
     }
-    //u32 i = *(up->base + UFR); // why do this?
-    // while (*(up->base + UFR) & TXFF)
-    //     ; // if the tx holding register is full, busy wait
 
-    while (!uart_pl011_is_writable(up->p_pl011_dev));
-    /*
-    The action sequence is:
-    Step 1. Update this program's knowledge about the UART state by setting the up->txon=1 to indicate that UART is busy trasmitting. 
-    Step 2. Enable the TX RX interrupt by "setting" the IMSC[TX][RX] bits.
-    Step 3. This is uputc(), so we write a char to the UDR.
-    
-    A TX interrupt will be raised after the single-char is transmitted Step 3.
-    Then IRQ_handler() -> uart_handler() -> do_tx()
+    // txon==0, which means PL011 has drained the output buffer,
+    // Now we need to give PL011 another kick to start another transmission.
+    // this is a shared variable, so need lock.
+    up->txon = 1;
+    unlock();
 
-    Ref UART PL011 spec：
-    If the FIFOs are disabled (have a depth of one location) and there is no data present in the transmitters single location,
-    the transmit interrupt is asserted HIGH. It is cleared by performing a single write to the transmit FIFO, or by clearing the
-    interrupt
-
-    */
-    up->txon = 1; // this line should precede the next line to ensure up-txon correctly reflect the status of TX interrupt.
-
-    // *(up->base + IMSC) |= (RX_BIT | TX_BIT);
-    uart_pl011_enable_intr (up->p_pl011_dev, UART_PL011_RX_INTR_MASK | UART_PL011_TX_INTR_MASK);
-
-    /*
-    Write the char data into the data register.
-    The write operation initiates the transmission according to the UART PL011 spec.
-    During the debug with qemu, I never see the UDR holding the data c.
-    I guess because in the non-FIFO mode, the data is immediately transmitted
-    and UDR returns to 0 immediately, or never changes.
-    And I did see the client for this UART port on the other side showing the transmitted data immediately.
-    After the UART hardware transmitted this single char, the MIS[TX] bit will be signaled with value 1!
-    We just rely on the hardware...
-    */
-    // *(up->base + UDR) = (u32)c;
+    // Here's another kick start to the PL011.
     uart_pl011_write(up->p_pl011_dev, c);
 }
 
 void ugets(UART *up, char *s)
 {
+    // kprintf("1111\n");
     while ((*s = ugetc(up)) != '\r')
     {
-        // below echo back won't work because it's part of the task, it won't get executed until a '\n' is received.
-        // echo back should be placed in the uart interrupt handler
-        // uputc(up, *s); // echo back as user is typing so user can see what he has just input.
         s++;
     }
 
-    uputc(up, '\n'); //echo to a new line, otherwise, the line just echoed will be overwritten.
-    uputc(up, '\r');
-
-    *s++ = '\n'; // add line break to the newly collected line.
-    *s++ = '\r';
+    // stick to CR LF, that is \r\n
+    // actually, we should support either \r\n or \n\r,
+    // because geometrically, they are equivalent
+    s++;
+    *s++ = '\n'; // add \n to move to next line, \r only moves to the head of current line
     *s = 0;
 }
 
