@@ -120,7 +120,7 @@ void do_rx_tf_m(UART *up)
     // when the FIFO is drained, the input buffer will faithfully contain what's received.
     do {
         // always put the read char into the input buffer
-        // do not check for room, allow overrun in the input buffer
+        // do not check for room, allow overrun in the input buffer, this is something can improve.
         uart_pl011_read(up->p_pl011_dev, &c);
         // kprintf("=1= inhead=%d, intail=%d, indata=%d, inroom=%d\n", up->inhead, up->intail, up->indata, up->inroom);
         up->inbuf[up->inhead++] = c;
@@ -335,7 +335,7 @@ u8 ugetc(UART *up)
 
 /*
 Below code can write a char to 2 different destinaitions.
-When output buffer is empty (txon==0), we write one char to PL011 direfctly.
+When output buffer is empty (txon==0), we write one char to PL011 directly.
 When output buffer is not empty (txon==1), we write one char to output buffer.
 
 According to PL011 TRM,
@@ -348,11 +348,13 @@ When PL011 is sending a char, there may be many chars sent to uputc().
 They will be put into the output ring buffer.
 
 So the whole paradigm is:
-We just kick start the PL011 transmission by writing the first byte to its data regiser,
+We just kick start the PL011 transmission by writing the first byte of the whole bunch of data to its data regiser,
 and then the isr do_tx_tf_m() will automatically collect data from output buffer and transmit it.
-If some time during this process, the output buffer becomes empty, the isr do_tx_tf_m() will
-set the txon=0. And the upper half code, i.e. uputc() will kick start again by directly writing
-to the PL011 data register. The whole process is self-adaptive.
+And the data after the first byte will be written to either output buffer or PL011, depending how fast PL011 get data from
+the output buffer.
+If some time during this process, the output buffer becomes empty, the isr do_tx_tf_m() will set the txon=0.
+Then the upper half code, i.e. uputc() will kick start again by directly writing one byte to the PL011 data register.
+The whole process is self-adaptive.
 
 This is so delicate and fascinating, isn't it!
 
@@ -367,7 +369,7 @@ void uputc(UART *up, u8 c)
     if (up->txon)
     {
         // always put new data into the ring buffer outbuf[]
-        // for simplicity, allow overrun
+        // for simplicity, allow overrun, this is something can improve.
         up->outbuf[up->outhead++] = c;
         up->outhead %= SBUFSIZE;
 
