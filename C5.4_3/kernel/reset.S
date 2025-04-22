@@ -65,14 +65,14 @@ tswitch:
     STR r10, [r1, #48]
     STR r11, [r1, #52]
     STR r12, [r1, #56]
-    STR lr, [r1, #60] // lr is the next instruction to run for the switched-out task
+    STR lr, [r1, #60] // lr is the next instruction to run for the switched-out task after returning from the tswitch()
 
 
     // change the global "running"
     // note that the "task switch" and "task scheduling" are 2 different things.
     // thus decoupled.
-    bl scheduler // we are still using the old task's stack to call scheduler
-    // now a new running task has been selected, it can still be the last one.
+    bl scheduler // we are still using the old task's stack to call scheduler()
+    // now a new task has been selected ans assigned to the global variable running, it can be the same or a differnt task.
 
     /*
     Get the sp from the new task's PROC structure.
@@ -111,14 +111,29 @@ tswitch:
     LDR r10, [r1, #48]
     LDR r11, [r1, #52]
     LDR r12, [r1, #56]
-    LDR lr, [r1, #60] // pc changed, jmp happens here!
-    MOV pc, lr
+    LDR lr, [r1, #60]
+    MOV pc, lr  // pc changed, jmp happens here!
 
 
 irq_handler:
+    // Check book $3.3.2 for why need sub #4
+    // this is the LR_irq
     sub lr, lr, #4
+    /*
+    Store the interrupted context on the IRQ mode stack.
+    Base register can be optionally updated following the data
+    transfer by appending it with a '!' symbol.
+    */
     stmfd sp!, {r0-r12, lr}
+    // call C function IRQ_handler() in the IRQ mode stack
     bl IRQ_handler
+    /*
+    Restore the interrupted context from the IRQ mode stack.
+    If the pop instruction has the 'S' bit set (by the '^' symbol), then transferring the PC register while in a privileged mode
+    also copies the saved SPSR to the previous mode CPSR, causing return to the previous mode prior to the exception (by SWI
+    or IRQ).
+    So we return from IRQ mode back to SVC mode.
+    */
     ldmfd sp!, {r0-r12, pc}^
 
 lock: // disable IRQ interrupts
@@ -133,20 +148,19 @@ unlock: // enable IRQ interrupts
     MSR cpsr, r0
     MOV pc, lr
 
-// in KC Wang's book, below function is named int_off
-// but it has nothing to do with interrupt
-// so I changed the name and implementation
-int_off: // only return CPSR
+// disable interrupt and return CPSR
+// u32 int_off(void)
+int_off:
     MRS r1, cpsr // load cpsr into r1
     MOV r0, r1 // store cpsr in r0 as the return value
-    ORR r1, r1, #0x80 // set IRQ mask bit  // maybe we don't need to care about interrupt here.
+    ORR r1, r1, #0x80 // set IRQ mask bit
     MSR cpsr, r1 // disable interrupt
     MOV pc, lr  // return by put lr into pc, lr (= old pc-4) is the next instruction to execute
 
-// in KC Wang's book, below function is named int_on
-// but it has nothing to do with interrupt
-// so I changed the name and implementation
-int_on: //restore original CPSR, void int_on(u32 CPSR)
+// restore original CPSR
+// void int_on(u32 CPSR)
+// the interrupt may be enabled if the input CPSR enables it
+int_on:
     MSR cpsr, r0 // parameter 1 is passed through r0
     MOV pc, lr
 
