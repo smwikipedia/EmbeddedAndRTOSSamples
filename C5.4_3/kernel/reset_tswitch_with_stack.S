@@ -41,26 +41,16 @@ tswitch:
     msr cpsr, r0      // IRQ disabled
 
     /*
+    Save the context in the stack of current task.
+    */
+    stmfd sp!, {r0-r12, lr} // totally 14 registers
+
+    /*
     Save current task's sp in current task's PROC structure.
     */
     LDR r0, =running // r0=&running, running is a PROC *, so r0 here is a PROC **
     LDR r1, [r0, #0] // r1=running, r1 is a PROC *
-
-    STR sp, [r1, #4] // running->ksp = sp
-    //STR r0, [r1, #8]  // r0 cannot be preserved for it is used before context can be saved
-    //STR r1, [r1, #12] // r1 cannot be preserved for it is used before context can be saved
-    STR r2, [r1, #16]
-    STR r3, [r1, #20]
-    STR r4, [r1, #24]
-    STR r5, [r1, #28]
-    STR r6, [r1, #32]
-    STR r7, [r1, #36]
-    STR r8, [r1, #40]
-    STR r9, [r1, #44]
-    STR r10, [r1, #48]
-    STR r11, [r1, #52]
-    STR r12, [r1, #56]
-    STR lr, [r1, #60] // lr is the next instruction to run for the switched-out task after returning from the tswitch()
+    str sp, [r1, #4] // running->ksp = sp
 
 
     // change the global "running"
@@ -86,23 +76,14 @@ tswitch:
     */
 
     /*
-     Resume the execution of the new PROC by restoring the context from the new PROC's struct
+     Resume the execution of the new PROC by restoring the context from the new PROC's stack
+     The new task's PROC.ksp field doesn't need to be updated here.
+     It will be updated when the task is scheduled out.
+
+     Differnt from the irq_handler, there's no "^" below after the register group.
+     Because we are all in SVC mode. There's no change of the CPSR.
     */
-
-    LDR r2, [r1, #16]
-    LDR r3, [r1, #20]
-    LDR r4, [r1, #24]
-    LDR r5, [r1, #28]
-    LDR r6, [r1, #32]
-    LDR r7, [r1, #36]
-    LDR r8, [r1, #40]
-    LDR r9, [r1, #44]
-    LDR r10, [r1, #48]
-    LDR r11, [r1, #52]
-    LDR r12, [r1, #56]
-    LDR lr, [r1, #60]
-    MOV pc, lr  // pc changed, jmp happens here!
-
+    ldmfd sp!, {r0-r12, pc}
 
 irq_handler:
     // Check book $3.3.2 for why need sub #4
