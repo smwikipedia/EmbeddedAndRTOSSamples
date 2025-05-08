@@ -1,0 +1,5 @@
+Requirements:
+1. QEMU >= 8.2.10 because we use netduinoplus2 board.
+   You may need to build from source because the QEMU installed with your Ubuntu may not be of the correct version.
+   ref: https://stackoverflow.com/questions/79610213/does-qemu-virt-board-really-support-cortex-m4-processor
+2.
