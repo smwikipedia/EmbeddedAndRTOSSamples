@@ -73,11 +73,12 @@ __isr_vector:
     I choose to always use .section directive.
     Ref: https://stackoverflow.com/questions/52284829/difference-between-section-text-and-text-with-gas
     */
-     .section .text.Default_Handler
+    .section .text.Default_Handler
     .thumb
     .thumb_func
     .align 1
     .type Default_Handler, %function
+    .globl Default_Handler
 Default_Handler:
 Infinite_Loop:
     b  Infinite_Loop
@@ -88,6 +89,9 @@ Infinite_Loop:
     .thumb_func
     .align 1
 
+    @ .thumb_set performs the equivalent of a .set directive in that it creates a symbol which is an alias for another symbol (possibly not yet defined).
+    @ This directive also has the added property in that it marks the aliased symbol as being a thumb function entry point, in the same way that the .thumb_func directive does.
+    @ https://www.sourceware.org/binutils/docs/as/ARM-Directives.html
     .weak      NMI_Handler
     .thumb_set NMI_Handler,Default_Handler
 
@@ -121,8 +125,8 @@ Infinite_Loop:
     .thumb
     .thumb_func
     .align 1
-    .globl Reset_Handler
     .type Reset_Handler, %function
+    .globl Reset_Handler
 Reset_Handler:
     bl SystemInit
     bl _start
