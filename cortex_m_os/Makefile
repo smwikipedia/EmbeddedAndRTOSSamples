@@ -70,8 +70,18 @@ KERNEL: $(OBJ_STARTUP_MCU) $(OBJ_KERNEL_MAIN)
 	$(OBJCOPY) $(OBJCOPY_FLAGS) $(KERNEL_ELF) $(KERNEL_BIN)
 
 
-QEMU_CMD_DEBUG = $(QEMU_ARM) -s -S -M netduinoplus2 -cpu cortex-m4 -serial telnet:127.0.0.1:1124,server -kernel $(KERNEL_BIN)
-QEMU_CMD_RUN = $(QEMU_ARM) -s -M netduinoplus2 -cpu cortex-m4 -serial telnet:127.0.0.1:1124,server -kernel $(KERNEL_BIN)
+
+# "-kernel" is the linux kernel loader
+# "-device loader,file=" is the generic loader, which is good for a completely bare-metal image which includes
+# the exception vector table and want to have it start in the same way the hardware would out of reset
+# Though KC Wang's Embedded and RTOS book use the -kernel, I think it is not a good choice for bare metal.
+# refs:
+# https://stackoverflow.com/questions/79616268/where-does-qemu-load-the-kernel-image-with-the-kernel-option
+# https://stackoverflow.com/questions/58420670/qemu-bios-vs-kernel-vs-device-loader-file
+QEMU_CMD_DEBUG = $(QEMU_ARM) -s -S -M netduinoplus2 -cpu cortex-m4 -serial telnet:127.0.0.1:1124,server -device loader,file=$(KERNEL_BIN)
+QEMU_CMD_RUN = $(QEMU_ARM) -s -M netduinoplus2 -cpu cortex-m4 -serial telnet:127.0.0.1:1124,server -device loader,file=$(KERNEL_BIN)
+# QEMU_CMD_DEBUG = $(QEMU_ARM) -s -S -M netduinoplus2 -cpu cortex-m4 -serial telnet:127.0.0.1:1124,server -kernel $(KERNEL_BIN)
+# QEMU_CMD_RUN = $(QEMU_ARM) -s -M netduinoplus2 -cpu cortex-m4 -serial telnet:127.0.0.1:1124,server -kernel $(KERNEL_BIN)
 
 
 
