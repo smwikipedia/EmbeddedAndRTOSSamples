@@ -24,9 +24,9 @@ SECTIONS
   /*
     I think the stack should be explicilty allocated in RAM.
     The MSP register value shows a value in ROM area if I didn't specify below.
-    But it works on QEMU. Strange.
+    But it works on QEMU. ROM is read-only but stack must be writable. So it is strange.
     In nRF CMSIS Device Family Pack, the stack does go to RAM area.
-    So maybe this is a QEMU bug and on a real board it won't work because ROM is not writable.
+    So maybe this is a QEMU bug. On a physical board it will not work.
   */
     .stack : { *(.stack*) } > RAM
     .heap : { *(.heap*) } > RAM

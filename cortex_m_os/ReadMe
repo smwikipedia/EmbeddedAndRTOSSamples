@@ -3,3 +3,24 @@ Requirements:
    You may need to build from source because the QEMU installed with your Ubuntu may not be of the correct version.
    ref: https://stackoverflow.com/questions/79610213/does-qemu-virt-board-really-support-cortex-m4-processor
 2.
+
+
+Preparation Steps:
+0. Install toolchain
+   sudo apt install ninja-build libglib2.0-dev flex bison
+
+1. Build latest QEMU from source (ref: https://github.com/qemu/qemu)
+   git clone git@github.com:qemu/qemu.git
+   cd qemu
+   mkdir build
+   cd build
+   ../configure
+   make
+
+2. Download ARM toolchain
+   Goto: https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads
+   wget https://developer.arm.com/-/media/Files/downloads/gnu/14.3.rel1/binrel/arm-gnu-toolchain-14.3.rel1-x86_64-arm-none-eabi.tar.xz
+   tar -vxf ./arm-gnu-toolchain-14.3.rel1-x86_64-arm-none-eabi.tar.xz
+   Change the toolchain path in the Makefile.
+
+
