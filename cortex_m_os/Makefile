@@ -2,7 +2,7 @@
 TOOL_CHAIN_DIR_0 = /home/ming/dev/toolchains/arm-gnu-toolchain-14.3.rel1-x86_64-arm-none-eabi/
 TOOL_CHAIN_DIR_1 = $(TOOL_CHAIN_DIR_0)/lib/gcc/arm-none-eabi/14.2.1
 TOOL_CHAIN_DIR_2 = $(TOOL_CHAIN_DIR_0)/arm-none-eabi
-QEMU_DIR = /usr/bin
+QEMU_DIR = /usr/local/bin/
 QEMU_ARM = $(QEMU_DIR)/qemu-system-arm
 QEMU_AARCH64 = $(QEMU_DIR)/qemu-system-aarch64
 

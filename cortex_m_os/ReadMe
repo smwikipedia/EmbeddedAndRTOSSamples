@@ -16,6 +16,7 @@ Preparation Steps:
    cd build
    ../configure
    make
+   sudo make install
 
 2. Download ARM toolchain
    Goto: https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads
@@ -23,4 +24,20 @@ Preparation Steps:
    tar -vxf ./arm-gnu-toolchain-14.3.rel1-x86_64-arm-none-eabi.tar.xz
    Change the toolchain path in the Makefile.
 
+3. Build
+   make BUILD
+
+4. Debug
+   4.1 make DEBUG (start the GDB server)
+   You should see:
+   qemu-system-arm: -serial telnet:127.0.0.1:1124,server: info: QEMU waiting for connection on: disconnected:telnet:127.0.0.1:1124,server=on
+
+   4.2 Run "telnet 127.0.0.1 1124"
+   The QEMU gdbserver started with "-s" is NOT connectable with "target remote :1234" command in gdb client
+   until above telnet step is finished. -- Be advised!
+
+   4.3 Run GDB client
+   arm-none-eabi-gdb
+   target remote :1234
+   (other debug commands)
 
