@@ -1,10 +1,12 @@
-# C5_4 - Sleep/Wakeup paradigm
-TOOL_CHAIN_DIR_0 = /home/ming/dev/toolchains/arm-gnu-toolchain-14.3.rel1-x86_64-arm-none-eabi/
+TOOL_CHAIN_DIR_0 = /home/ming/dev/toolchains/arm-gnu-toolchain-14.3.rel1-x86_64-arm-none-eabi
 TOOL_CHAIN_DIR_1 = $(TOOL_CHAIN_DIR_0)/lib/gcc/arm-none-eabi/14.2.1
 TOOL_CHAIN_DIR_2 = $(TOOL_CHAIN_DIR_0)/arm-none-eabi
-QEMU_DIR = /usr/local/bin/
+QEMU_DIR = /usr/local/bin
 QEMU_ARM = $(QEMU_DIR)/qemu-system-arm
 QEMU_AARCH64 = $(QEMU_DIR)/qemu-system-aarch64
+
+# Run "qemu-system-arm -M help | grep M4" to find the boards that support Cortex-M4
+QEMU_BOARD_NAME = ast1030-evb
 
 ARM_TOOLCHAIN_PREFIX=$(TOOL_CHAIN_DIR_0)/bin/arm-none-eabi-
 AS = $(ARM_TOOLCHAIN_PREFIX)as
@@ -16,20 +18,20 @@ RMDIR = rm -r -f
 MKDIR = mkdir -p
 
 MCU = m4
-DEVICE_FLAGS = -DNRF52_SERIES -DNRF52840_XXAA
+DEVICE_FLAGS =
 WORKSPACE = .
 BUILD_DIR = $(WORKSPACE)/build
 CMSIS_DIR = $(WORKSPACE)/cmsis
-DFP_DIR = $(WORKSPACE)/dfp
+RESET_DIR = $(WORKSPACE)/reset
 PERIPHERAL_DIR = $(WORKSPACE)/peripheral
 KERNEL_DIR = $(WORKSPACE)/kernel
 LD_SCRIPT_DIR = $(WORKSPACE)/linker
-LD_SCRIPT = $(LD_SCRIPT_DIR)/m4_simple.ld
+LD_SCRIPT = $(LD_SCRIPT_DIR)/$(QEMU_BOARD_NAME).ld
 
 
 INCLUDES = \
 	-I $(CMSIS_DIR) \
-    -I $(DFP_DIR) \
+    -I $(RESET_DIR) \
     -I $(PERIPHERAL_DIR) \
 	-I $(TOOL_CHAIN_DIR_1)/include \
 	-I $(TOOL_CHAIN_DIR_2)/include
@@ -48,12 +50,12 @@ START_UP = startup_$(MCU)_simple
 START_UP_SRC_SUFFIX = S
 START_UP_SRC = $(START_UP).$(START_UP_SRC_SUFFIX)
 OBJ_STARTUP_MCU = $(BUILD_DIR)/$(START_UP).o
-$(OBJ_STARTUP_MCU) : $(DFP_DIR)/$(START_UP_SRC)
+$(OBJ_STARTUP_MCU) : $(RESET_DIR)/$(START_UP_SRC)
 	echo "build startup assembly"
 	# if the startup.S contains preprocessor directive like #include.
 	# we have to use gcc rather than as directly.
-	# $(AS) $(AS_FLAGS) $(DFP_DIR)/$(START_UP_SRC) -o $(OBJ_STARTUP_MCU)
-	$(GCC) $(GCC_FLAGS_STARTUP) $(DFP_DIR)/$(START_UP_SRC) -o $(OBJ_STARTUP_MCU)
+	# $(AS) $(AS_FLAGS) $(RESET_DIR)/$(START_UP_SRC) -o $(OBJ_STARTUP_MCU)
+	$(GCC) $(GCC_FLAGS_STARTUP) $(RESET_DIR)/$(START_UP_SRC) -o $(OBJ_STARTUP_MCU)
 
 ## kernel
 OBJ_KERNEL_MAIN = $(BUILD_DIR)/main.o
@@ -78,10 +80,13 @@ KERNEL: $(OBJ_STARTUP_MCU) $(OBJ_KERNEL_MAIN)
 # refs:
 # https://stackoverflow.com/questions/79616268/where-does-qemu-load-the-kernel-image-with-the-kernel-option
 # https://stackoverflow.com/questions/58420670/qemu-bios-vs-kernel-vs-device-loader-file
-QEMU_CMD_DEBUG = $(QEMU_ARM) -s -S -M netduinoplus2 -cpu cortex-m4 -serial telnet:127.0.0.1:1124,server -device loader,file=$(KERNEL_BIN)
-QEMU_CMD_RUN = $(QEMU_ARM) -s -M netduinoplus2 -cpu cortex-m4 -serial telnet:127.0.0.1:1124,server -device loader,file=$(KERNEL_BIN)
-# QEMU_CMD_DEBUG = $(QEMU_ARM) -s -S -M netduinoplus2 -cpu cortex-m4 -serial telnet:127.0.0.1:1124,server -kernel $(KERNEL_BIN)
-# QEMU_CMD_RUN = $(QEMU_ARM) -s -M netduinoplus2 -cpu cortex-m4 -serial telnet:127.0.0.1:1124,server -kernel $(KERNEL_BIN)
+# 
+# If you see "Cannot load specified image... exceeds maximum image size" error, add the "-m" to specify the memory. Some boards need it.
+# 
+QEMU_CMD_DEBUG = $(QEMU_ARM) -s -S -M $(QEMU_BOARD_NAME) -cpu cortex-m4 -m 2048 -serial telnet:127.0.0.1:1124,server -device loader,file=$(KERNEL_BIN)
+QEMU_CMD_RUN = $(QEMU_ARM) -s -M $(QEMU_BOARD_NAME) -cpu cortex-m4 -m 2048 -serial telnet:127.0.0.1:1124,server -device loader,file=$(KERNEL_BIN)
+# QEMU_CMD_DEBUG = $(QEMU_ARM) -s -S -M $(QEMU_BOARD_NAME) -cpu cortex-m4 -serial telnet:127.0.0.1:1124,server -kernel $(KERNEL_BIN)
+# QEMU_CMD_RUN = $(QEMU_ARM) -s -M $(QEMU_BOARD_NAME) -cpu cortex-m4 -serial telnet:127.0.0.1:1124,server -kernel $(KERNEL_BIN)
 
 
 

@@ -39,5 +39,6 @@ Preparation Steps:
    4.3 Run GDB client
    arm-none-eabi-gdb
    target remote :1234
+   file <path to the kernel.elf>
    (other debug commands)
 
