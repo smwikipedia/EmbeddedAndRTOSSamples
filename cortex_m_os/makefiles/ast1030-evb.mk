@@ -1,5 +1,5 @@
 TOOL_CHAIN_DIR_0 = /home/ming/dev/toolchains/arm-gnu-toolchain-14.3.rel1-x86_64-arm-none-eabi
-TOOL_CHAIN_DIR_1 = $(TOOL_CHAIN_DIR_0)/lib/gcc/arm-none-eabi/14.2.1
+TOOL_CHAIN_DIR_1 = $(TOOL_CHAIN_DIR_0)/lib/gcc/arm-none-eabi/14.3.1
 TOOL_CHAIN_DIR_2 = $(TOOL_CHAIN_DIR_0)/arm-none-eabi
 QEMU_DIR = /usr/local/bin
 QEMU_ARM = $(QEMU_DIR)/qemu-system-arm
@@ -19,22 +19,31 @@ MKDIR = mkdir -p
 
 MCU = m4
 DEVICE_FLAGS =
+
+
+USART_MODEL = ns16550
+
+
 WORKSPACE = .
 BUILD_DIR = $(WORKSPACE)/build
 CMSIS_DIR = $(WORKSPACE)/cmsis
 RESET_DIR = $(WORKSPACE)/reset
-PERIPHERAL_DIR = $(WORKSPACE)/peripheral
+
+PERIPHERAL_DIR = $(WORKSPACE)/peripherals
+PERIPHERAL_USART_DIR = $(PERIPHERAL_DIR)/usart
+PERIPHERAL_USART_MODEL_DIR = $(PERIPHERAL_USART_DIR)/$(USART_MODEL)
+
 KERNEL_DIR = $(WORKSPACE)/kernel
 LD_SCRIPT_DIR = $(WORKSPACE)/linker
 LD_SCRIPT = $(LD_SCRIPT_DIR)/$(QEMU_BOARD_NAME).ld
 
 
 INCLUDES = \
-	-I $(CMSIS_DIR) \
+    -I $(CMSIS_DIR) \
     -I $(RESET_DIR) \
-    -I $(PERIPHERAL_DIR) \
-	-I $(TOOL_CHAIN_DIR_1)/include \
-	-I $(TOOL_CHAIN_DIR_2)/include
+    -I $(PERIPHERAL_DIR)/include \
+    -I $(TOOL_CHAIN_DIR_1)/include \
+    -I $(TOOL_CHAIN_DIR_2)/include
 
 LIBS = libs/libgcc.a
 AS_FLAGS = -mcpu=cortex-m4
@@ -63,13 +72,20 @@ $(OBJ_KERNEL_MAIN) : $(KERNEL_DIR)/main.c
 	echo "build kernel main"
 	$(GCC) $(GCC_FLAGS) $(KERNEL_DIR)/main.c -o $(OBJ_KERNEL_MAIN)
 
+## usart
+OBJ_USART = $(BUILD_DIR)/usart.o
+$(OBJ_USART) : $(PERIPHERAL_USART_MODEL_DIR)/impl.c
+	echo "build usart driver"
+	$(GCC) $(GCC_FLAGS) $(PERIPHERAL_USART_MODEL_DIR)/impl.c -o $(OBJ_USART)
 
 
-KERNEL_ELF = $(BUILD_DIR)/kernel.elf
-KERNEL_BIN = $(BUILD_DIR)/kernel.bin
-KERNEL: $(OBJ_STARTUP_MCU) $(OBJ_KERNEL_MAIN)
-	$(LD) $(OBJ_STARTUP_MCU) $(OBJ_KERNEL_MAIN) $(LD_FLAGS) -o $(KERNEL_ELF)
-	$(OBJCOPY) $(OBJCOPY_FLAGS) $(KERNEL_ELF) $(KERNEL_BIN)
+
+OS_ELF = $(BUILD_DIR)/os.elf
+OS_BIN = $(BUILD_DIR)/os.bin
+OS_DPENDENCIES = $(OBJ_STARTUP_MCU) $(OBJ_KERNEL_MAIN) $(OBJ_USART)
+OS_IMG: $(OS_DPENDENCIES)
+	$(LD) $(OS_DPENDENCIES) $(LD_FLAGS) -o $(OS_ELF)
+	$(OBJCOPY) $(OBJCOPY_FLAGS) $(OS_ELF) $(OS_BIN)
 
 
 
@@ -83,10 +99,10 @@ KERNEL: $(OBJ_STARTUP_MCU) $(OBJ_KERNEL_MAIN)
 # 
 # If you see "Cannot load specified image... exceeds maximum image size" error, add the "-m" to specify the memory. Some boards need it.
 # 
-QEMU_CMD_DEBUG = $(QEMU_ARM) -s -S -M $(QEMU_BOARD_NAME) -cpu cortex-m4 -m 2048 -serial telnet:127.0.0.1:1124,server -device loader,file=$(KERNEL_BIN)
-QEMU_CMD_RUN = $(QEMU_ARM) -s -M $(QEMU_BOARD_NAME) -cpu cortex-m4 -m 2048 -serial telnet:127.0.0.1:1124,server -device loader,file=$(KERNEL_BIN)
-# QEMU_CMD_DEBUG = $(QEMU_ARM) -s -S -M $(QEMU_BOARD_NAME) -cpu cortex-m4 -serial telnet:127.0.0.1:1124,server -kernel $(KERNEL_BIN)
-# QEMU_CMD_RUN = $(QEMU_ARM) -s -M $(QEMU_BOARD_NAME) -cpu cortex-m4 -serial telnet:127.0.0.1:1124,server -kernel $(KERNEL_BIN)
+QEMU_CMD_DEBUG = $(QEMU_ARM) -s -S -M $(QEMU_BOARD_NAME) -cpu cortex-m4 -m 2048 -serial telnet:127.0.0.1:1124,server -device loader,file=$(OS_BIN)
+QEMU_CMD_RUN = $(QEMU_ARM) -s -M $(QEMU_BOARD_NAME) -cpu cortex-m4 -m 2048 -serial telnet:127.0.0.1:1124,server -device loader,file=$(OS_BIN)
+# QEMU_CMD_DEBUG = $(QEMU_ARM) -s -S -M $(QEMU_BOARD_NAME) -cpu cortex-m4 -serial telnet:127.0.0.1:1124,server -kernel $(OS_BIN)
+# QEMU_CMD_RUN = $(QEMU_ARM) -s -M $(QEMU_BOARD_NAME) -cpu cortex-m4 -serial telnet:127.0.0.1:1124,server -kernel $(OS_BIN)
 
 
 
@@ -94,7 +110,7 @@ CREATE_BLD_DIR:
 	$(MKDIR) $(BUILD_DIR)
 CLEAN :
 	$(RMDIR) $(BUILD_DIR)
-BUILD :  CREATE_BLD_DIR KERNEL
+BUILD :  CREATE_BLD_DIR OS_IMG
 REBUILD : CLEAN BUILD
 
 DEBUG : BUILD
