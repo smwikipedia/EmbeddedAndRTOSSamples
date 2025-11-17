@@ -1,0 +1,13 @@
+CompileFlags:
+  Compiler: /home/ming/dev/toolchains/arm-gnu-toolchain-14.3.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-gcc
+  CompilationDatabase: .
+  Index:
+    Background: Skip
+
+InlayHints:
+  BlockEnd: No
+  Designators: No
+  Enabled: Yes
+  ParameterNames: No
+  DeducedTypes: Yes
+  TypeNameLimit: 24
