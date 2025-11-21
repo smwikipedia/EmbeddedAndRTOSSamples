@@ -16,6 +16,8 @@ the minimum __STARTUP_CONFIG_STACK_ALIGNEMENT is therefore 3.
     .syntax unified
     .cpu cortex-m4
     .fpu softvfp
+    // ".thumb" ensures labels defined within a Thumb block are correctly marked as Thumb entry points.
+    // i.e., their address will be represented as address | 1 when referenced by BX/BLX from ARM code.
     .thumb
 
     // Stack
