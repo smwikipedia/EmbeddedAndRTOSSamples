@@ -1,0 +1,5 @@
+Refer to cortex_m_os/docs/DDI0479B_cortex_m_system_design_kit_r0p0_trm.pdf
+
+Refer to cortex_m_os/docs/DAI0500B_cortex_m7_on_v2m_mps2.pdf
+Check $3.5 for the memory map of CMSDK APB Subsystem.
+

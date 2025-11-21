@@ -5,8 +5,9 @@ QEMU_DIR = /usr/local/bin
 QEMU_ARM = $(QEMU_DIR)/qemu-system-arm
 QEMU_AARCH64 = $(QEMU_DIR)/qemu-system-aarch64
 
-# Run "qemu-system-arm -M help | grep M4" to find the boards that support Cortex-M4
-QEMU_BOARD_NAME = ast1030-evb
+# Run "qemu-system-arm -M help | grep M7" to find the boards that support Cortex-M7
+# mps2 doc: https://www.qemu.org/docs/master/system/arm/mps2.html
+QEMU_BOARD_NAME = mps2-an500
 
 ARM_TOOLCHAIN_PREFIX=$(TOOL_CHAIN_DIR_0)/bin/arm-none-eabi-
 AS = $(ARM_TOOLCHAIN_PREFIX)as
@@ -22,7 +23,7 @@ QEMU_CPU = cortex-m7
 DEVICE_FLAGS =
 
 
-USART_MODEL = ns16550
+USART_MODEL = apb_uart
 
 
 WORKSPACE = .
@@ -107,7 +108,7 @@ OS_IMG: $(OS_DPENDENCIES)
 # 
 # If you see "Cannot load specified image... exceeds maximum image size" error, add the "-m" to specify the memory. Some boards need it.
 # 
-QEMU_CMD_DEBUG = $(QEMU_ARM) -s -S -M $(QEMU_BOARD_NAME) -cpu $(QEMU_CPU) -m 2048 -serial telnet:127.0.0.1:1124,server -device loader,file=$(OS_BIN)
+QEMU_CMD_DEBUG = $(QEMU_ARM) -s -S -M $(QEMU_BOARD_NAME) -cpu $(QEMU_CPU) -m 16 -serial telnet:127.0.0.1:1124,server -device loader,file=$(OS_BIN)
 QEMU_CMD_RUN = $(QEMU_ARM) -s -M $(QEMU_BOARD_NAME) -cpu $(QEMU_CPU) -m 2048 -serial telnet:127.0.0.1:1124,server -device loader,file=$(OS_BIN)
 # QEMU_CMD_DEBUG = $(QEMU_ARM) -s -S -M $(QEMU_BOARD_NAME) -cpu $(QEMU_CPU) -serial telnet:127.0.0.1:1124,server -kernel $(OS_BIN)
 # QEMU_CMD_RUN = $(QEMU_ARM) -s -M $(QEMU_BOARD_NAME) -cpu $(QEMU_CPU) -serial telnet:127.0.0.1:1124,server -kernel $(OS_BIN)

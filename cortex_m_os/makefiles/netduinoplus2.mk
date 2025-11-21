@@ -17,7 +17,8 @@ OBJCOPY = $(ARM_TOOLCHAIN_PREFIX)objcopy
 RMDIR = rm -r -f
 MKDIR = mkdir -p
 
-MCU = m4
+CMSIS_MCU = cm4
+QEMU_CPU = cortex-m4
 DEVICE_FLAGS = -DNRF52_SERIES -DNRF52840_XXAA
 
 
@@ -27,12 +28,13 @@ USART_MODEL = ns16550
 WORKSPACE = .
 BUILD_DIR = $(WORKSPACE)/build
 CMSIS_DIR = $(WORKSPACE)/cmsis
+CMSIS_INCLUDE_DIR = $(CMSIS_DIR)/includes
 RESET_DIR = $(WORKSPACE)/reset
 
 PERIPHERAL_DIR = $(WORKSPACE)/peripherals
 PERIPHERAL_USART_DIR = $(PERIPHERAL_DIR)/usart
 PERIPHERAL_USART_MODEL_DIR = $(PERIPHERAL_USART_DIR)/$(USART_MODEL)
-KERNEL_DIR = $(WORKSPACE)/kernel
+KERNEL_DIR = $(WORKSPACE)/kernel/$(CMSIS_MCU)
 LD_SCRIPT_DIR = $(WORKSPACE)/linker
 LD_SCRIPT = $(LD_SCRIPT_DIR)/$(QEMU_BOARD_NAME).ld
 
@@ -40,19 +42,20 @@ LD_SCRIPT = $(LD_SCRIPT_DIR)/$(QEMU_BOARD_NAME).ld
 INCLUDES = \
     -I $(CMSIS_DIR) \
     -I $(RESET_DIR) \
+    -I $(CMSIS_INCLUDE_DIR)/$(CMSIS_MCU) \
     -I $(PERIPHERAL_DIR)/include \
     -I $(TOOL_CHAIN_DIR_1)/include \
     -I $(TOOL_CHAIN_DIR_2)/include
 
 LIBS = libs/libgcc.a
-AS_FLAGS = -mcpu=cortex-m4
-GCC_FLAGS = -g -c -nostdinc $(INCLUDES) -Werror $(DEVICE_FLAGS) -mcpu=cortex-m4 -specs=nosys.specs -masm-syntax-unified
+AS_FLAGS = -mcpu=$(QEMU_CPU)
+GCC_FLAGS = -g -c -nostdinc $(INCLUDES) -Werror $(DEVICE_FLAGS) -mcpu=$(QEMU_CPU) -specs=nosys.specs
 GCC_FLAGS_STARTUP = $(GCC_FLAGS) -D__STARTUP_CONFIG
 LD_FLAGS = -T $(LD_SCRIPT) -nostdlib
 OBJCOPY_FLAGS = -O binary
 
 ## start up mcu
-START_UP = startup_$(MCU)_simple
+START_UP = startup_$(CMSIS_MCU)_simple
 # the suffix must be "S" rather than "s" if the file contains preprocessor directives.
 # ref: https://stackoverflow.com/a/51110745/264052
 START_UP_SRC_SUFFIX = S
@@ -71,6 +74,11 @@ $(OBJ_KERNEL_MAIN) : $(KERNEL_DIR)/main.c
 	echo "build kernel main"
 	$(GCC) $(GCC_FLAGS) $(KERNEL_DIR)/main.c -o $(OBJ_KERNEL_MAIN)
 
+OBJ_KERNEL_SYSTEMINIT = $(BUILD_DIR)/SystemInit.o
+$(OBJ_KERNEL_SYSTEMINIT) : $(KERNEL_DIR)/SystemInit.c
+	echo "build kernel SystemInit"
+	$(GCC) $(GCC_FLAGS) $(KERNEL_DIR)/SystemInit.c -o $(OBJ_KERNEL_SYSTEMINIT)
+
 ## usart
 OBJ_USART = $(BUILD_DIR)/usart.o
 $(OBJ_USART) : $(PERIPHERAL_USART_MODEL_DIR)/impl.c
@@ -80,7 +88,7 @@ $(OBJ_USART) : $(PERIPHERAL_USART_MODEL_DIR)/impl.c
 
 OS_ELF = $(BUILD_DIR)/os.elf
 OS_BIN = $(BUILD_DIR)/os.bin
-OS_DPENDENCIES = $(OBJ_STARTUP_MCU) $(OBJ_KERNEL_MAIN) $(OBJ_USART)
+OS_DPENDENCIES = $(OBJ_STARTUP_MCU) $(OBJ_KERNEL_MAIN) $(OBJ_KERNEL_SYSTEMINIT) $(OBJ_USART)
 OS_IMG: $(OS_DPENDENCIES)
 	$(LD) $(OS_DPENDENCIES) $(LD_FLAGS) -o $(OS_ELF)
 	$(OBJCOPY) $(OBJCOPY_FLAGS) $(OS_ELF) $(OS_BIN)
@@ -94,10 +102,10 @@ OS_IMG: $(OS_DPENDENCIES)
 # refs:
 # https://stackoverflow.com/questions/79616268/where-does-qemu-load-the-kernel-image-with-the-kernel-option
 # https://stackoverflow.com/questions/58420670/qemu-bios-vs-kernel-vs-device-loader-file
-QEMU_CMD_DEBUG = $(QEMU_ARM) -s -S -M $(QEMU_BOARD_NAME) -cpu cortex-m4 -serial telnet:127.0.0.1:1124,server -device loader,file=$(OS_BIN)
-QEMU_CMD_RUN = $(QEMU_ARM) -s -M $(QEMU_BOARD_NAME) -cpu cortex-m4 -serial telnet:127.0.0.1:1124,server -device loader,file=$(OS_BIN)
-# QEMU_CMD_DEBUG = $(QEMU_ARM) -s -S -M $(QEMU_BOARD_NAME) -cpu cortex-m4 -serial telnet:127.0.0.1:1124,server -kernel $(OS_BIN)
-# QEMU_CMD_RUN = $(QEMU_ARM) -s -M $(QEMU_BOARD_NAME) -cpu cortex-m4 -serial telnet:127.0.0.1:1124,server -kernel $(OS_BIN)
+QEMU_CMD_DEBUG = $(QEMU_ARM) -s -S -M $(QEMU_BOARD_NAME) -cpu $(QEMU_CPU) -serial telnet:127.0.0.1:1124,server -device loader,file=$(OS_BIN)
+QEMU_CMD_RUN = $(QEMU_ARM) -s -M $(QEMU_BOARD_NAME) -cpu $(QEMU_CPU) -serial telnet:127.0.0.1:1124,server -device loader,file=$(OS_BIN)
+# QEMU_CMD_DEBUG = $(QEMU_ARM) -s -S -M $(QEMU_BOARD_NAME) -cpu $(QEMU_CPU) -serial telnet:127.0.0.1:1124,server -kernel $(OS_BIN)
+# QEMU_CMD_RUN = $(QEMU_ARM) -s -M $(QEMU_BOARD_NAME) -cpu $(QEMU_CPU) -serial telnet:127.0.0.1:1124,server -kernel $(OS_BIN)
 
 
 
