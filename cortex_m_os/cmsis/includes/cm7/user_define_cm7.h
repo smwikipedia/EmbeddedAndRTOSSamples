@@ -25,9 +25,9 @@ typedef enum {
   PendSV_IRQn               =  -2,              /*!< -2 Pendable request for system service                                    */
   SysTick_IRQn              =  -1,              /*!< -1 System Tick Timer                                                      */
 /* ========================================  ARM_Example Specific Interrupt Numbers  ========================================= */
-  TIMER0_IRQn               =   0,              /*!< 0  Timer 0 interrupt                                                      */
-  TIMER1_IRQn               =   4,              /*!< 4  Timer 2 interrupt                                                      */
-  TIMER2_IRQn               =   6               /*!< 6  Timer 2 interrupt                                                      */
+  UART0_RX_IRQn             =   0,              /*!< 0  UART 0 receive interrupt                                               */
+  UART0_TX_IRQn             =   1,              /*!< 0  UART 0 transmit interrupt                                              */
+
 } IRQn_Type;
 
 

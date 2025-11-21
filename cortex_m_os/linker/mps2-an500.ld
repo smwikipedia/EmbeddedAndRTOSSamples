@@ -4,22 +4,13 @@ Inspired by: https://stackoverflow.com/a/67592534/264052
 */
 
 /*
- From here: https://docs.zephyrproject.org/latest/boards/aspeed/ast1030_evb/doc/index.html
- The ROM size is 1MB (0x100000), the RAM size is 768KB.
-
- From Zephyr RTOS file: boards/aspeed/ast1030_evb/ast1030_evb.dts
- The SRAM is like below. The format is <base, size>:
- &sram0 {
-	reg = <0 DT_SIZE_K(448)>, <0x70000 DT_SIZE_K(320)>;
-  };
-
- So I specify the RAM at 0x7000, length is 320K (0x50000).
- Otherwise, you will see Usage Fault at boot.
+ From here: https://www.scribd.com/document/705805574/DAI0500B-cortex-m7-on-v2m-mps2
+ Use the PRAM range for RAM: 0x60000000~0x60FFFFFF PSRAM (16MB)
 */
 MEMORY
 {
   ROM (rx) : ORIGIN = 0x00000000, LENGTH = 0x400000
-  RAM (rwx) : ORIGIN = 0x20800000,   LENGTH = 0x10000
+  RAM (rwx) : ORIGIN = 0x60000000,   LENGTH = 0x1000000
 }
 
 ENTRY(Reset_Handler)
