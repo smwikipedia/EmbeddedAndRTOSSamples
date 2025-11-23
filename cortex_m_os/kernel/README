@@ -1,0 +1,3 @@
+OS kernel code.
+Should be hardware agnostic.
+Depends on drivers and subsys.

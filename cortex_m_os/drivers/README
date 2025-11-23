@@ -1,0 +1,6 @@
+Drivers for peripherals.
+Depends on HAL.
+
+
+If there's an interface definition, I will follow it.
+Such as Driver_USART.h/.c.

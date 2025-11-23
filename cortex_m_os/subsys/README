@@ -1,0 +1,2 @@
+Sub-systems like file system, protocol stack, etc.
+Depends on drivers.
