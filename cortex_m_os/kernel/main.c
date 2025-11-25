@@ -1,11 +1,12 @@
 
-void main(void) __attribute__ ((noreturn));
-void main(void)
+void main (void) __attribute__ ((noreturn));
+void main (void)
 {
-    while(1);
+    while (1)
+        ;
 }
 
-void _start(void)
+void _start (void)
 {
     /*
     C/C++ initialiation,
@@ -14,5 +15,5 @@ void _start(void)
     ...
     */
 
-    main();
+    main ();
 }

@@ -2,6 +2,7 @@ Board specific code.
 - startup code
 - SystemInit code for board init
 - nvic configuration
+- peripherals
 - linker script
 - Makefile
-- Specs
+- docs
