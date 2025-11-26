@@ -12,6 +12,8 @@ CLANG_FORMAT = clang-format-15
 # mps2 doc: https://www.qemu.org/docs/master/system/arm/mps2.html
 QEMU_BOARD_NAME = mps2-an500
 QEMU_CPU = cortex-m7
+# https://stackoverflow.com/a/53720371/264052
+QEMU_CPU_ATTRIBUTES = +nofp
 CMSIS_MCU = cm7
 DEVICE_FLAGS =
 
@@ -54,7 +56,7 @@ OBJCOPY = $(ARM_TOOLCHAIN_PREFIX)objcopy
 
 LIBS = libs/libgcc.a
 AS_FLAGS = -mcpu=$(QEMU_CPU)
-GCC_FLAGS = -g -c -nostdinc $(INCLUDES) -Werror $(DEVICE_FLAGS) -mcpu=$(QEMU_CPU) -specs=nosys.specs -O0
+GCC_FLAGS = -g -c -nostdinc $(INCLUDES) -Werror $(DEVICE_FLAGS) -mcpu=$(QEMU_CPU)$(QEMU_CPU_ATTRIBUTES) -specs=nosys.specs -O0
 GCC_FLAGS_STARTUP = $(GCC_FLAGS) -D__STARTUP_CONFIG
 LD_FLAGS = -T $(LD_SCRIPT) -nostdlib
 OBJCOPY_FLAGS = -O binary
