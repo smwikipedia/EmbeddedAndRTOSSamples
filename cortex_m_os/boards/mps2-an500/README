@@ -1,1 +1,13 @@
-https://docs.zephyrproject.org/latest/boards/aspeed/ast1030_evb/doc/index.html
+QEMU page for mps2-an500
+https://www.qemu.org/docs/master/system/arm/mps2.html
+
+Arm Application Note AN500
+https://developer.arm.com/documentation/dai0500/latest/
+DAI0500B_cortex_m7_on_v2m_mps2.pdf
+$3.5 CMSDK APB Subsystem contains memory map for peripherals.
+
+ARM CMSDK TRM (for CMSDK APB Subsys)
+https://developer.arm.com/documentation/ddi0479/d/?lang=en
+DDI0479D_m_class_processor_system_r1p1_trm.pdf
+This doc describes programming models for UART, timer, etc.
+
