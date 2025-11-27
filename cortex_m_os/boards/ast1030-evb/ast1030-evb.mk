@@ -160,9 +160,9 @@ CLEAN :
 BUILD :  CREATE_BLD_DIR OS_IMG
 REBUILD : CLEAN BUILD
 
-DEBUG : BUILD
+DEBUG : REBUILD
 	$(QEMU_CMD_DEBUG)
-RUN : BUILD
+RUN : REBUILD
 	$(QEMU_CMD_RUN)
 FORMAT:
 	@find . -name "*.c" | xargs $(CLANG_FORMAT) -i --style=file:.clang-format
