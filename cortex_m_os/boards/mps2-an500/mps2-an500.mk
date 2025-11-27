@@ -148,7 +148,23 @@ OS_IMG: $(OS_DPENDENCIES)
 # 
 # If you see "Cannot load specified image... exceeds maximum image size" error, add the "-m" to specify the memory. Some boards need it.
 # 
+
+
+# With "-serial pty", the QEMU UART0 is mappted to a file "/dev/pts/6". But I cannot use "echo -n "abc" > /dev/pts/6" to send data to it. So UART RX interrupt cannot be triggered.
+# But I can "cat /dev/pts/6" and trigger the RX interrupt. Don't know why.
+# QEMU_CMD_DEBUG = $(QEMU_ARM) -s -S -M $(QEMU_BOARD_NAME) -cpu $(QEMU_CPU) -m 16 -serial pty -device loader,file=$(OS_BIN)
+
+# With "-serial tcp:127.0.0.1:1124,server", the QEMU UART0 is mapped to port 1124.
+# I can use telnet 127.0.0.1 1124 to it. The press a key. Then don't forget to press the ENTER.
+# Then RX interrupt is triggered.
+# The "tcp:" option has a better display than "telnet:" because it has echo back in Linux console.
+# QEMU_CMD_DEBUG = $(QEMU_ARM) -s -S -M $(QEMU_BOARD_NAME) -cpu $(QEMU_CPU) -m 16 -serial tcp:127.0.0.1:1124,server -device loader,file=$(OS_BIN)
+
+# With "-serial telnet:127.0.0.1:1124,server", it is similar to "tcp:".
+# The diff is, I don't need to press ENTER to send the data. And it doesn't have echo back in Linux console.
 QEMU_CMD_DEBUG = $(QEMU_ARM) -s -S -M $(QEMU_BOARD_NAME) -cpu $(QEMU_CPU) -m 16 -serial telnet:127.0.0.1:1124,server -device loader,file=$(OS_BIN)
+
+
 QEMU_CMD_RUN = $(QEMU_ARM) -s -M $(QEMU_BOARD_NAME) -cpu $(QEMU_CPU) -m 2048 -serial telnet:127.0.0.1:1124,server -device loader,file=$(OS_BIN)
 # QEMU_CMD_DEBUG = $(QEMU_ARM) -s -S -M $(QEMU_BOARD_NAME) -cpu $(QEMU_CPU) -serial telnet:127.0.0.1:1124,server -kernel $(OS_BIN)
 # QEMU_CMD_RUN = $(QEMU_ARM) -s -M $(QEMU_BOARD_NAME) -cpu $(QEMU_CPU) -serial telnet:127.0.0.1:1124,server -kernel $(OS_BIN)

@@ -104,10 +104,13 @@ Reset_Handler:
     .align 1
     .type Uart_Handler, %function
     .globl Uart_Handler
-Uart_Handler:
-    b  Uart_C_Handler
-    .size  Uart_Handler, . - Uart_Handler
+Uart0_Rx_Handler:
+    b  Uart_C_Handler_Rx
+    .size  Uart0_Rx_Handler, . - Uart0_Rx_Handler
 
+Uart0_Tx_Handler:
+    b  Uart_C_Handler_Tx
+    .size  Uart0_Tx_Handler, . - Uart0_Tx_Handler
 
     /*
     These are the weak handlers that has only dummy logic
@@ -149,11 +152,11 @@ Uart_Handler:
     .weak      SysTick_Handler
     .thumb_set SysTick_Handler, Default_Handler
 
-    .weak      Uart0_Rx_Handler
-    .thumb_set Uart0_Rx_Handler, Uart_Handler
+    @ .weak      Uart0_Rx_Handler
+    @ .thumb_set Uart0_Rx_Handler, Uart_Handler
 
-    .weak      Uart0_Tx_Handler
-    .thumb_set Uart0_Tx_Handler, Uart_Handler
+    @ .weak      Uart0_Tx_Handler
+    @ .thumb_set Uart0_Tx_Handler, Uart_Handler
 
 
     // "ax": allocatable, executable

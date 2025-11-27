@@ -38,11 +38,11 @@ extern "C"
 /* ================                           Processor and Core Peripheral Section ================ */
 /* =========================================================================================================================== */
 
-/* ===========================  Configuration of the ARM Cortex-M3 Processor and Core Peripherals  =========================== */
+/* ===========================  Configuration of the ARM Cortex-M7 Processor and Core Peripherals  =========================== */
 #define __CM3_REV \
     0x0100U /*!< CM3 Core Revision */
 #define __NVIC_PRIO_BITS \
-    3 /*!< Number of Bits used for Priority Levels */
+    8 /*!< Number of Bits used for Priority Levels */
 #define __Vendor_SysTickConfig \
     0 /*!< Set to 1 if different SysTick Config is used */
 #define __MPU_PRESENT \
