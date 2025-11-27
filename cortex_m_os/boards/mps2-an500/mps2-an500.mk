@@ -55,7 +55,7 @@ LD = $(ARM_TOOLCHAIN_PREFIX)ld
 OBJCOPY = $(ARM_TOOLCHAIN_PREFIX)objcopy
 
 LIBS = libs/libgcc.a
-AS_FLAGS = -mcpu=$(QEMU_CPU)
+AS_FLAGS = -mcpu=$(QEMU_CPU)$(QEMU_CPU_ATTRIBUTES) -g
 GCC_FLAGS = -g -c -nostdinc $(INCLUDES) -Werror $(DEVICE_FLAGS) -mcpu=$(QEMU_CPU)$(QEMU_CPU_ATTRIBUTES) -specs=nosys.specs -O0
 GCC_FLAGS_STARTUP = $(GCC_FLAGS) -D__STARTUP_CONFIG
 LD_FLAGS = -T $(LD_SCRIPT) -nostdlib
