@@ -25,7 +25,8 @@ Preparation Steps:
    Change the toolchain path in the Makefile.
 
 3. Build
-   make BUILD
+   Choose the mk file for a board and build. Such as:
+   make -f boards/mps2-an500/mps2-an500.mk BUILD
 
 4. Debug
    4.1 make DEBUG (start the GDB server)
