@@ -102,12 +102,16 @@ Reset_Handler:
     .section .text.Peripheral_Handlers
     .thumb_func
     .align 1
-    .type Uart_Handler, %function
-    .globl Uart_Handler
+    .type Uart0_Rx_Handler, %function
+    .globl Uart0_Rx_Handler
 Uart0_Rx_Handler:
     b  Uart_C_Handler_Rx
     .size  Uart0_Rx_Handler, . - Uart0_Rx_Handler
 
+    .thumb_func
+    .align 1
+    .type Uart0_Tx_Handler, %function
+    .globl Uart0_Tx_Handler
 Uart0_Tx_Handler:
     b  Uart_C_Handler_Tx
     .size  Uart0_Tx_Handler, . - Uart0_Tx_Handler
