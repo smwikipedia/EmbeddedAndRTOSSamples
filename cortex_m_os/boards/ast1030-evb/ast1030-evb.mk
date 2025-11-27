@@ -165,4 +165,4 @@ DEBUG : REBUILD
 RUN : REBUILD
 	$(QEMU_CMD_RUN)
 FORMAT:
-	@find . -name "*.c" | xargs $(CLANG_FORMAT) -i --style=file:.clang-format
+	@find . -name "*.c" -o -name "*.h" | xargs $(CLANG_FORMAT) -i --style=file:.clang-format
