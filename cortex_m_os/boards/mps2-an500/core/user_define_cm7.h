@@ -15,8 +15,7 @@ extern "C"
     {
         /* =======================================  ARM Cortex-M3 Specific Interrupt Numbers  ======================================== */
         Reset_IRQn = -15, /*!< -15  Reset Vector, invoked on Power up and warm reset                     */
-        NonMaskableInt_IRQn =
-        -14, /*!< -14  Non maskable Interrupt, cannot be stopped or preempted */
+        NonMaskableInt_IRQn = -14, /*!< -14  Non maskable Interrupt, cannot be stopped or preempted */
         HardFault_IRQn = -13, /*!< -13  Hard Fault, all classes of Fault */
         MemoryManagement_IRQn = -12, /*!< -12  Memory Management, MPU mismatch, including Access Violation
                                           and No Match */
@@ -39,16 +38,12 @@ extern "C"
 /* =========================================================================================================================== */
 
 /* ===========================  Configuration of the ARM Cortex-M7 Processor and Core Peripherals  =========================== */
-#define __CM3_REV \
-    0x0100U /*!< CM3 Core Revision */
-#define __NVIC_PRIO_BITS \
-    8 /*!< Number of Bits used for Priority Levels */
+#define __CM3_REV 0x0100U  /*!< CM3 Core Revision */
+#define __NVIC_PRIO_BITS 8 /*!< Number of Bits used for Priority Levels */
 #define __Vendor_SysTickConfig \
-    0 /*!< Set to 1 if different SysTick Config is used */
-#define __MPU_PRESENT \
-    1 /*!< MPU present or not */
-#define __FPU_PRESENT \
-    0 /*!< FPU present or not */
+    0                   /*!< Set to 1 if different SysTick Config is used */
+#define __MPU_PRESENT 1 /*!< MPU present or not */
+#define __FPU_PRESENT 0 /*!< FPU present or not */
 
 #include <core_cm7.h>
 
