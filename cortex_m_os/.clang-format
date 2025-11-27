@@ -359,6 +359,7 @@ PenaltyReturnTypeOnItsOwnLine: 20
 # SortIncludes (bool)
 # If true, clang-format will sort #includes.
 #SortIncludes: false (from v3.9)
+SortIncludes: false
 
 # SpaceAfterCStyleCast (bool)
 # If true, a space may be inserted after C style casts.
