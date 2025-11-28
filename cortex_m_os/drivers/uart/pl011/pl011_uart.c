@@ -2,5 +2,5 @@
 
 int32_t uart_init (void* regs)
 {
-    return 0;
+  return 0;
 }
