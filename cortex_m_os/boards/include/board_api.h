@@ -11,11 +11,11 @@ i.e. This is what ANY board looks like in the eyes of OS.
 
 // Utilities
 #define DEAD_LOOP \
-    do            \
-        {         \
-            ;     \
-        }         \
-    while (1)
+  do              \
+    {             \
+      ;           \
+    }             \
+  while (1)
 
 
 // UART

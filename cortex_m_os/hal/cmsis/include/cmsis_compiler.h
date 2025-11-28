@@ -105,41 +105,41 @@
 #ifndef __UNALIGNED_UINT32 /* deprecated */
 struct __attribute__ ((packed)) T_UINT32
 {
-    uint32_t v;
+  uint32_t v;
 };
 #define __UNALIGNED_UINT32(x) (((struct T_UINT32*)(x))->v)
 #endif
 #ifndef __UNALIGNED_UINT16_WRITE
 __PACKED_STRUCT T_UINT16_WRITE
 {
-    uint16_t v;
+  uint16_t v;
 };
 #define __UNALIGNED_UINT16_WRITE(addr, val) \
-    (void)((((struct T_UINT16_WRITE*)(void*)(addr))->v) = (val))
+  (void)((((struct T_UINT16_WRITE*)(void*)(addr))->v) = (val))
 #endif
 #ifndef __UNALIGNED_UINT16_READ
 __PACKED_STRUCT T_UINT16_READ
 {
-    uint16_t v;
+  uint16_t v;
 };
 #define __UNALIGNED_UINT16_READ(addr) \
-    (((const struct T_UINT16_READ*)(const void*)(addr))->v)
+  (((const struct T_UINT16_READ*)(const void*)(addr))->v)
 #endif
 #ifndef __UNALIGNED_UINT32_WRITE
 __PACKED_STRUCT T_UINT32_WRITE
 {
-    uint32_t v;
+  uint32_t v;
 };
 #define __UNALIGNED_UINT32_WRITE(addr, val) \
-    (void)((((struct T_UINT32_WRITE*)(void*)(addr))->v) = (val))
+  (void)((((struct T_UINT32_WRITE*)(void*)(addr))->v) = (val))
 #endif
 #ifndef __UNALIGNED_UINT32_READ
 __PACKED_STRUCT T_UINT32_READ
 {
-    uint32_t v;
+  uint32_t v;
 };
 #define __UNALIGNED_UINT32_READ(addr) \
-    (((const struct T_UINT32_READ*)(const void*)(addr))->v)
+  (((const struct T_UINT32_READ*)(const void*)(addr))->v)
 #endif
 #ifndef __ALIGNED
 #define __ALIGNED(x) __attribute__ ((aligned (x)))
@@ -201,41 +201,41 @@ __PACKED_STRUCT T_UINT32_READ
 #ifndef __UNALIGNED_UINT32 /* deprecated */
 struct __packed__ T_UINT32
 {
-    uint32_t v;
+  uint32_t v;
 };
 #define __UNALIGNED_UINT32(x) (((struct T_UINT32*)(x))->v)
 #endif
 #ifndef __UNALIGNED_UINT16_WRITE
 __PACKED_STRUCT T_UINT16_WRITE
 {
-    uint16_t v;
+  uint16_t v;
 };
 #define __UNALIGNED_UINT16_WRITE(addr, val) \
-    (void)((((struct T_UINT16_WRITE*)(void*)(addr))->v) = (val))
+  (void)((((struct T_UINT16_WRITE*)(void*)(addr))->v) = (val))
 #endif
 #ifndef __UNALIGNED_UINT16_READ
 __PACKED_STRUCT T_UINT16_READ
 {
-    uint16_t v;
+  uint16_t v;
 };
 #define __UNALIGNED_UINT16_READ(addr) \
-    (((const struct T_UINT16_READ*)(const void*)(addr))->v)
+  (((const struct T_UINT16_READ*)(const void*)(addr))->v)
 #endif
 #ifndef __UNALIGNED_UINT32_WRITE
 __PACKED_STRUCT T_UINT32_WRITE
 {
-    uint32_t v;
+  uint32_t v;
 };
 #define __UNALIGNED_UINT32_WRITE(addr, val) \
-    (void)((((struct T_UINT32_WRITE*)(void*)(addr))->v) = (val))
+  (void)((((struct T_UINT32_WRITE*)(void*)(addr))->v) = (val))
 #endif
 #ifndef __UNALIGNED_UINT32_READ
 __PACKED_STRUCT T_UINT32_READ
 {
-    uint32_t v;
+  uint32_t v;
 };
 #define __UNALIGNED_UINT32_READ(addr) \
-    (((const struct T_UINT32_READ*)(const void*)(addr))->v)
+  (((const struct T_UINT32_READ*)(const void*)(addr))->v)
 #endif
 #ifndef __ALIGNED
 #define __ALIGNED(x) __align (x)
@@ -296,41 +296,41 @@ __PACKED_STRUCT T_UINT32_READ
 #ifndef __UNALIGNED_UINT32 /* deprecated */
 @packed struct T_UINT32
 {
-    uint32_t v;
+  uint32_t v;
 };
 #define __UNALIGNED_UINT32(x) (((struct T_UINT32*)(x))->v)
 #endif
 #ifndef __UNALIGNED_UINT16_WRITE
 __PACKED_STRUCT T_UINT16_WRITE
 {
-    uint16_t v;
+  uint16_t v;
 };
 #define __UNALIGNED_UINT16_WRITE(addr, val) \
-    (void)((((struct T_UINT16_WRITE*)(void*)(addr))->v) = (val))
+  (void)((((struct T_UINT16_WRITE*)(void*)(addr))->v) = (val))
 #endif
 #ifndef __UNALIGNED_UINT16_READ
 __PACKED_STRUCT T_UINT16_READ
 {
-    uint16_t v;
+  uint16_t v;
 };
 #define __UNALIGNED_UINT16_READ(addr) \
-    (((const struct T_UINT16_READ*)(const void*)(addr))->v)
+  (((const struct T_UINT16_READ*)(const void*)(addr))->v)
 #endif
 #ifndef __UNALIGNED_UINT32_WRITE
 __PACKED_STRUCT T_UINT32_WRITE
 {
-    uint32_t v;
+  uint32_t v;
 };
 #define __UNALIGNED_UINT32_WRITE(addr, val) \
-    (void)((((struct T_UINT32_WRITE*)(void*)(addr))->v) = (val))
+  (void)((((struct T_UINT32_WRITE*)(void*)(addr))->v) = (val))
 #endif
 #ifndef __UNALIGNED_UINT32_READ
 __PACKED_STRUCT T_UINT32_READ
 {
-    uint32_t v;
+  uint32_t v;
 };
 #define __UNALIGNED_UINT32_READ(addr) \
-    (((const struct T_UINT32_READ*)(const void*)(addr))->v)
+  (((const struct T_UINT32_READ*)(const void*)(addr))->v)
 #endif
 #ifndef __ALIGNED
 #warning No compiler specific solution for __ALIGNED. __ALIGNED is ignored.
