@@ -9,8 +9,8 @@
 
 
 /*
- APIs for cmsdk_apb_uart
+ APIs for stm32f405 uart
 */
-int32_t uart_init (void* regs);
+int32_t uart_init_stm32f405 (void* regs);
 
 #endif

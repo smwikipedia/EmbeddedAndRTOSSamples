@@ -23,10 +23,15 @@ i.e. This is what ANY board looks like in the eyes of OS.
 /*
 Get the total number of available UART instances.
 */
-uint32_t board_get_uart_instance_total_number (void);
+uint32_t board_uart_get_total_instance_number (void);
 
 /*
 Init a UART instance.
+
+If a board has more than one models of UART, which is possible,
+this API should tell between them through the instance parameter.
+And call the correct model-specific API to init it.
+
 */
 int32_t board_uart_init (uint32_t instance);
 

@@ -4,14 +4,14 @@
 #include <stdint.h>
 
 /*
- TODO: HAL for cmsdk_apb_uart
+ TODO: HAL for ns16550 uart
 */
 
 
 /*
- APIs for cmsdk_apb_uart
+ APIs for ns16550 uart
 */
-int32_t uart_init (void* regs);
+int32_t uart_init_ns16550 (void* regs);
 
 
 #endif

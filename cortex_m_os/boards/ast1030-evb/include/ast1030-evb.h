@@ -9,7 +9,7 @@
  UARTs
 */
 
-#define AST1030_EVB_UART_MAX_NUM 2
+#define AST1030_EVB_UART_MAX_NUM 1
 
 
 #endif

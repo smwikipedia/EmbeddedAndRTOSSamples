@@ -36,7 +36,7 @@ typedef struct
 /*
  APIs for cmsdk_apb_uart
 */
-int32_t uart_init (void* regs);
+int32_t uart_init_cmsdk_apb (void* regs);
 
 
 #endif

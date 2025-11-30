@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include <uart/cmsdk_apb_uart.h>
 
-int32_t uart_init (void* regs)
+int32_t uart_init_cmsdk_apb (void* regs)
 {
   CMSDK_APB_UART_TYPE* dev = (CMSDK_APB_UART_TYPE*)regs;
 
