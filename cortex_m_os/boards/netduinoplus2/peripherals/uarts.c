@@ -6,13 +6,13 @@
 /*
 Convert the UART instance number to its reg block address.
 */
-static void* get_uart_reg_block (uint32_t instance)
+static void* uart_get_reg_block (uint32_t instance)
 {
   return 0;
 }
 
 
-uint32_t board_get_uart_instance_total_number (void)
+uint32_t board_uart_get_total_instance_number (void)
 {
   return NETDUINOPLUS2_UART_MAX_NUM;
 }
@@ -20,6 +20,7 @@ uint32_t board_get_uart_instance_total_number (void)
 
 int32_t board_uart_init (uint32_t instance)
 {
-  void* uart_reg_block = get_uart_reg_block (instance);
+  void* uart_reg_block = uart_get_reg_block (instance);
+  uart_init_stm32f405 (uart_reg_block);
   return 0;
 }

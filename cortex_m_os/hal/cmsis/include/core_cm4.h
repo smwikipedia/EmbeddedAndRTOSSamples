@@ -2104,8 +2104,8 @@ extern "C"
     \brief   Get Pending Interrupt
     \details Reads the NVIC pending register and returns the pending bit for the
     specified device specific interrupt. \param [in]      IRQn  Device specific
-    interrupt number. \return             0  Interrupt status is not pending. \return
-    1  Interrupt status is pending. \note    IRQn must not be negative.
+    interrupt number. \return             0  Interrupt status is not pending.
+    \return 1  Interrupt status is pending. \note    IRQn must not be negative.
    */
   __STATIC_INLINE uint32_t __NVIC_GetPendingIRQ (IRQn_Type IRQn)
   {
