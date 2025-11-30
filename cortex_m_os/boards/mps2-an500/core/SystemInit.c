@@ -20,21 +20,6 @@ void setup_nvic (void)
   NVIC_EnableIRQ (UART0_TX_IRQn);
 }
 
-
-void Uart_C_Handler_Rx (void) __attribute__ ((noreturn));
-void Uart_C_Handler_Rx (void)
-{
-  while (1)
-    ;
-}
-
-void Uart_C_Handler_Tx (void) __attribute__ ((noreturn));
-void Uart_C_Handler_Tx (void)
-{
-  while (1)
-    ;
-}
-
 void SystemInit (void)
 {
   setup_periperals ();

@@ -36,4 +36,7 @@ And call the correct model-specific API to init it.
 int32_t board_uart_init (uint32_t instance);
 
 
+int32_t board_uart_tx_data (uint32_t instance, uint8_t* data, uint32_t count);
+
+
 #endif
