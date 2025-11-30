@@ -1,3 +1,7 @@
+/*
+Refer to : CMSIS5/Device/ARM/ARMCM7/Source/GCC/startup_ARMCM7.S
+*/
+
 
 /* Define size of stack. Size must be multiple of 4. */
 #define __STARTUP_CONFIG_STACK_SIZE   0x1000
@@ -14,20 +18,20 @@ the minimum __STARTUP_CONFIG_STACK_ALIGNEMENT is therefore 3.
 
     // collectively define the characteristics of the generated machine code
     .syntax unified
+    @ No need to specify both .arch and .cpu.
+    @ .cpu is usually the more precise and preferred directive.
+    @ .arch armv7-m
     .cpu cortex-m4
     .fpu softvfp
-    /*
-    ".thumb" ensures labels defined within a thumb block are correctly marked as thumb entry points.
-    i.e., their address will be represented as address | 1 when referenced by BX/BLX from ARM code.
-    This performs the same action as ".code 16."
-    The ".code" directive selects the instruction set being generated.
-    The value 16 selects Thumb, with the value 32 selecting ARM.
-    */
-    .thumb
 
 
     // Stack
     .section .stack
+    /*
+    For ARM, the .align number is the number of low-order zero bits the location counter must have after advancement.
+    For example ‘.align 3’ advances the location counter until it is a multiple of 8.
+    If the location counter is already a multiple of 8, no change is needed.
+     */
     .align __STARTUP_CONFIG_STACK_ALIGNEMENT
     // generate an absolute symbol Stack_Size: no address, has a value, and no memory consumption
     .equ   Stack_Size, __STARTUP_CONFIG_STACK_SIZE
@@ -61,13 +65,82 @@ __HeapLimit:
 
 
     /*
+    ".thumb" ensures labels defined within a thumb block are correctly marked as thumb entry points.
+    i.e., their address will be represented as address | 1 when referenced by BX/BLX from ARM code.
+    This performs the same action as ".code 16."
+    The ".code" directive selects the instruction set being generated.
+    The value 16 selects Thumb, with the value 32 selecting ARM.
+    The .thumb directive in ARM unified assembly language has file-local scope and applies to all subsequent instructions until explicitly changed by another directive.
+    */
+    .thumb
+    /*
     .text always designates the code section regardless of its actual name in the output format.
     .section lets the programmer specify any section name and not supported by a.out format.
     I choose to always use .section directive.
     Ref: https://stackoverflow.com/questions/52284829/difference-between-section-text-and-text-with-gas
     */
-    .section .text.Default_Handler
-    @.thumb
+    .section .text
+    .align 2
+
+    /*
+    I met an annoying issue when debugging the reset code with GDB server started with "-S".
+    And it seems to be related to the .type directive (https://sourceware.org/binutils/docs/as.html#Type)
+    A related question: https://stackoverflow.com/questions/79831305/why-is-gdb-showing-the-wrong-function-name
+
+    (1) with the ".type <name>, %function"
+    I have to put the Reset_Handler as the first function in the .text section.
+    Otherwise the GDB will show a wrong function name when stopping at the first instuction in the Reset_Handler.
+    The wrong function is whatever function immediately placed before the Reset_Handler and with a .type directive.
+
+    In CMSIS 5, the startup_ARMCM7.S puts the Reset_Handler as the first function in the .code section.
+    If I move it to somewhere else, the exactly same issue will happen.
+    If I remove the ".type Reset_Handler, %function", the function name can be displayed correctly no matter where I
+    put the Reset_Handler.
+
+    (2) with "".func"
+    I can put Reset_Handler anywhere. And the GDB shows the correct name for instuctions in Reset_Handler.
+
+    I consulted AI, and it says this:
+    "In essence, .type <name>, %function is the fundamental and generally preferred directive for declaring a symbol as a function for
+    the linker and debugger in modern ARM assembly. .func is more of a legacy or supplementary directive that provides a structural block
+    and might trigger some implicit behaviors related to debugging."
+
+    And it gives me below example.
+    But this example also has the issue in (1)
+
+    my_function:
+    .globl my_function
+    .type my_function, %function  @ Defines type for linker/debugger
+    .func                         @ Marks function start for block structure / older tools
+    .thumb_func                   @ Essential for inter-working (can be implicit with .type %function)
+    .fnstart                      @ Begins detailed CFI for debugger
+
+    @ ... function code ...
+
+    .fnend                        @ Ends detailed CFI
+    .endfunc                      @ Ends function block
+
+
+    (3) And the GNU as options --gstabs and --gdwarf are also related.
+    According to AI,
+    --gstabs is old and limited, it is rare in modern ARM context.
+    --gdwarf is modern and powerful, it is standard for modern ARM development.
+
+    (4) Conclusion
+    Because of (1), I keep using the .type directive and put Reset_Handler as the first function in .text section.
+    Because of (3), I choose --gdwarf-5 in the mps2-an500.mk file.
+     */
+Reset_Handler:
+    .func
+    .thumb_func
+    .type Reset_Handler, %function
+    .globl Reset_Handler
+    nop
+    bl SystemInit
+    bl _start
+    .size  Reset_Handler, . - Reset_Handler
+    .endfunc
+
     /*
     Ref: https://www.sourceware.org/binutils/docs/as/ARM-Directives.html
     The ".thumb_func" directive specifies that the following symbol is the name of a Thumb encoded function.
@@ -76,45 +149,38 @@ __HeapLimit:
     The presence of this directive also implies .thumb.
     So we don't need the ".thumb" directive.
      */
-    .thumb_func
-    .align 1
     // "%function" is a type attribute of a symbol
+Default_Handler:
+    .func
+    .thumb_func
     .type Default_Handler, %function
     .globl Default_Handler
-Default_Handler:
     b  Default_Handler
     .size  Default_Handler, . - Default_Handler
+    .endfunc
 
-
-    @Reset Handler
-    .section .text.Reset_Handler
-    .thumb_func
-    .align 1
-    .type Reset_Handler, %function
-    .globl Reset_Handler
-Reset_Handler:
-    nop
-    bl SystemInit
-    bl _start
-    .size  Reset_Handler, . - Reset_Handler
-
-
-@     .section .text.Peripheral_Handlers
+@     // Peripheral Handlers
+@ Uart0_Rx_Handler:
+@     .func
 @     .thumb_func
-@     .align 1
-@     .type Uart_Handler, %function
-@     .globl Uart_Handler
-@ Uart_Handler:
-@     b  Uart_C_Handler
-@     .size  Uart_Handler, . - Uart_Handler
+@     .type Uart0_Rx_Handler, %function
+@     .globl Uart0_Rx_Handler
+@     b  Uart_C_Handler_Rx
+@     .size  Uart0_Rx_Handler, . - Uart0_Rx_Handler
+@     .endfunc
 
+@ Uart0_Tx_Handler:
+@     .func
+@     .thumb_func
+@     @ .type Uart0_Tx_Handler, %function
+@     .globl Uart0_Tx_Handler
+@     b  Uart_C_Handler_Tx
+@     .size  Uart0_Tx_Handler, . - Uart0_Tx_Handler
+@     .endfunc
 
     /*
     These are the weak handlers that has only dummy logic
     */
-    .section .text.Weak_Handlers
-    .thumb_func
-    .align 1
 
     /*
     .thumb_set performs the equivalent of a .set directive in that it creates a symbol which is an alias for another symbol (possibly not yet defined).
@@ -157,14 +223,14 @@ Reset_Handler:
 
 
     // "ax": allocatable, executable
-    .section .isr_vector, "ax"
+    .section .isr_vectors, "ax"
     .align 2
-    .globl __isr_vector
+    .globl __isr_vectors
+    .globl __isr_vectors_end
+    .globl __isr_vectors_size
     // Vector Table
-__isr_vector:
-    // The address 0 is the MSP. So place the __StackTop here.
+__isr_vectors:
     .long   __StackTop
-    // The address 0x4 is where M4 looks for a reset handler. So place Reset_Handler here.
     .long  Reset_Handler
     .long  NMI_Handler
     .long  HardFault_Handler
@@ -186,3 +252,10 @@ __isr_vector:
     // check the user_define_cm4.h for the interrupt numbers
     @ .long Uart0_Rx_Handler  // exception 16, IRQ 0
     @ .long Uart0_Tx_Handler  // exception 17, IRQ 1
+
+    .space   (224 * 4)                          /* Interrupts 0 .. 224 are left out */
+__isr_vectors_end:
+    .equ     __isr_vectors_size, __isr_vectors_end - __isr_vectors
+    .size    __isr_vectors, . - __isr_vectors
+
+    .end
