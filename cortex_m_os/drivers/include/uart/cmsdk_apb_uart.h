@@ -10,6 +10,17 @@
 /*
  TODO: HAL for cmsdk_apb_uart
 */
+
+#define RX_BUFFER_OVERRUN 0x8
+#define TX_BUFFER_OVERRUN 0x4
+#define RX_BUFFER_FULL 0x2
+#define TX_BUFFER_FULL 0x1
+
+#define RX_OVERRUN_INT_FLAG 0x8
+#define TX_OVERRUN_INT_FLAG 0x4
+#define RX_INT_FLAG 0x2
+#define TX_INT_FLAG 0x1
+
 typedef struct
 {
   uint32_t DATA;           // lower 8 bits
@@ -36,7 +47,10 @@ typedef struct
 /*
  APIs for cmsdk_apb_uart
 */
+
 int32_t uart_init_cmsdk_apb (void* regs);
+uint8_t uart_rx_data_cmsdk_apb (void* regs);
+int32_t uart_tx_data_cmsdk_apb (void* regs, uint8_t* data, uint32_t count);
 
 
 #endif

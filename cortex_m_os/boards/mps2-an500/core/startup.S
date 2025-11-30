@@ -165,16 +165,20 @@ Uart0_Rx_Handler:
     .thumb_func
     .type Uart0_Rx_Handler, %function
     .globl Uart0_Rx_Handler
-    b  Uart_C_Handler_Rx
+    push {lr}
+    bl  Uart_C_Handler_Rx
+    pop {pc}
     .size  Uart0_Rx_Handler, . - Uart0_Rx_Handler
     .endfunc
 
 Uart0_Tx_Handler:
     .func
     .thumb_func
-    @ .type Uart0_Tx_Handler, %function
+    .type Uart0_Tx_Handler, %function
     .globl Uart0_Tx_Handler
-    b  Uart_C_Handler_Tx
+    push {lr}
+    bl  Uart_C_Handler_Tx
+    pop {pc}
     .size  Uart0_Tx_Handler, . - Uart0_Tx_Handler
     .endfunc
 
