@@ -13,9 +13,11 @@ ENTRY(Reset_Handler)
 
 SECTIONS
 {
-    .text : {
+    .isr_vectors : {
         /*About KEEP(): https://stackoverflow.com/questions/9827157/what-does-keep-mean-in-a-linker-script */
-        KEEP(*(.isr_vector))
+        KEEP(*(.isr_vectors))
+        } > ROM
+    .text : {
         *(.text*)
         } > ROM
     .rodata : { *(.rodata*) } > ROM
