@@ -1,10 +1,13 @@
-#include "board_api.h"
-#include "user_define_cm7.h"
+#include <board_api.h>
+#include <mps2-an500.h>
+#include <user_define_cm7.h>
 
 
 int32_t setup_periperals (void)
 {
-  board_uart_init (0);
+  board_uart_init (UART_0);
+  board_uart_init (UART_1);
+  board_uart_init (UART_2);
 
   return 0;
 }
@@ -12,12 +15,46 @@ int32_t setup_periperals (void)
 void setup_nvic (void)
 {
   /*
-   Set priority and enable interrupt in NVIC
+  Set priority and enable interrupt in NVIC
+  NVIC interrupts are prioritized by updating an 8-bit field within a 32-bit register (each register supporting
+  four interrupts). Priorities are maintained according to the Armv7-M prioritization scheme. See Exception
+  priorities and preemption on page B1-526.
+
+  See DDI0403E ARMv7M ARM $B.1.5.4
+  The number of supported priority values is an IMPLEMENTATION DEFINED power of two in the range 8 to 256, and
+  the minimum supported priority value is always 0. All priority value fields are 8-bits, and if an implementation
+  supports fewer than 256 priority levels then low-order bits of these fields are RAZ.
+
+  According to CMSIS5 Device/ARM/ARMCM7/Include/ARMCM7.h, CM7 implements __NVIC_PRIO_BITS=3 bits for priority.
+
+  Refer: DDI0403E Cortex-M ARM
+  With a Cortex-M NVIC,
+  - when two interrupts of the SAME priority are "happening" (i.e., triggered or pending),
+  only one bit will be set in the Interrupt Active Bit Register (IABR) at any given time for those specific interrupts.
+  - when two interrupts of DIFFERENT priorities are happening,
+  two bits will be set in the Interrupt Active Bit Register (IABR), specifically when preemption occurs.
+
+  So it's simpler to assign all UART instances the same priority.
+  So that I don't need to consult the Interrupt Priority Register to decide
+  which UART is the trigger.
+
   */
-  NVIC_SetPriority (UART0_RX_IRQn, 4);
-  // Enable the 2 interrupts for UART0 TX and RX.
-  NVIC_EnableIRQ (UART0_RX_IRQn);
-  NVIC_EnableIRQ (UART0_TX_IRQn);
+  NVIC_SetPriority (UART_0_RX_IRQN, NVIC_PRIORITY_UART_0);
+  NVIC_SetPriority (UART_0_TX_IRQN, NVIC_PRIORITY_UART_0);
+  NVIC_SetPriority (UART_1_RX_IRQN, NVIC_PRIORITY_UART_0);
+  NVIC_SetPriority (UART_1_TX_IRQN, NVIC_PRIORITY_UART_0);
+  NVIC_SetPriority (UART_2_RX_IRQN, NVIC_PRIORITY_UART_0);
+  NVIC_SetPriority (UART_2_TX_IRQN, NVIC_PRIORITY_UART_0);
+  NVIC_SetPriority (UART_0_1_2_OVERRUN_IRQN, NVIC_PRIORITY_UART_0);
+
+  // Enable the interrupts for UART0/1 TX and RX.
+  NVIC_EnableIRQ (UART_0_RX_IRQN);
+  NVIC_EnableIRQ (UART_0_TX_IRQN);
+  NVIC_EnableIRQ (UART_1_RX_IRQN);
+  NVIC_EnableIRQ (UART_1_TX_IRQN);
+  NVIC_EnableIRQ (UART_2_RX_IRQN);
+  NVIC_EnableIRQ (UART_2_TX_IRQN);
+  NVIC_EnableIRQ (UART_0_1_2_OVERRUN_IRQN);
 }
 
 void SystemInit (void)

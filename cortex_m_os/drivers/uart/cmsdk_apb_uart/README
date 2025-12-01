@@ -3,3 +3,28 @@ Refer to cortex_m_os/docs/DDI0479B_cortex_m_system_design_kit_r0p0_trm.pdf
 Refer to cortex_m_os/docs/DAI0500B_cortex_m7_on_v2m_mps2.pdf
 Check $3.5 for the memory map of CMSDK APB Subsystem.
 
+
+About cmsdk_apb_uart
+---
+
+Accroding to DDI0479B $4.3.1, the register interface of cmsdk_apb_uart includes:
+- DATA
+- STATE
+- CTRL
+- INTSTATUS/INTCLEAR
+- BAUDDIV
+
+Other registers are all read-only.
+
+In these registers, only below 2 are read-only:
+- STATE[0] TX buffer full
+- STATE[1] RX buffer full
+
+All the others must be written 1 to clear.
+
+So this implies STATE[0]/[1] are maintained by the hardware.
+And we have to rely on them to determine if there's data to Tx or Rx.
+And this true as I experimented.
+
+After we act according to the STATE[0]/[1], we can write 1 to clear
+other related registers.
