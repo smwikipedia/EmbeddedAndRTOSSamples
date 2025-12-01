@@ -33,17 +33,22 @@ extern "C"
   } IRQn_Type;
 
 
-/* =========================================================================================================================== */
-/* ================                           Processor and Core Peripheral Section ================ */
-/* =========================================================================================================================== */
-
-/* ===========================  Configuration of the ARM Cortex-M7 Processor and Core Peripherals  =========================== */
-#define __CM3_REV 0x0100U  /*!< CM3 Core Revision */
-#define __NVIC_PRIO_BITS 8 /*!< Number of Bits used for Priority Levels */
+/*
+ --------  Configuration of Core Peripherals  --------
+ Copied from CMSIS5 Device/ARM/ARMCM7/Include/ARMCM7.h
+*/
+#define __CM7_REV 0x0000U   /* Core revision r0p0 */
+#define __MPU_PRESENT 1U    /* MPU present */
+#define __VTOR_PRESENT 1U   /* VTOR present */
+#define __NVIC_PRIO_BITS 3U /* Number of Bits used for Priority Levels */
 #define __Vendor_SysTickConfig \
-  0                     /*!< Set to 1 if different SysTick Config is used */
-#define __MPU_PRESENT 1 /*!< MPU present or not */
-#define __FPU_PRESENT 0 /*!< FPU present or not */
+  0U                        /* Set to 1 if different SysTick Config is used */
+#define __FPU_PRESENT 0U    /* no FPU present */
+#define __FPU_DP 0U         /* unused */
+#define __ICACHE_PRESENT 1U /* Instruction Cache present */
+#define __DCACHE_PRESENT 1U /* Data Cache present */
+#define __DTCM_PRESENT 1U   /* Data Tightly Coupled Memory present */
+
 
 #include <core_cm7.h>
 

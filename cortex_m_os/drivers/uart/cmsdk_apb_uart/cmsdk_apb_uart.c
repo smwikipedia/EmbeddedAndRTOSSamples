@@ -7,6 +7,7 @@ int32_t uart_init_cmsdk_apb (void* regs)
 
   /*
   According to: DDI0479D_m_class_processor_system_r1p1_trm.pdf
+  9600 -> 1250
   You must program the baud rate divider register before enabling the UART.
   */
   dev->BAUDDIV = 1250;
@@ -16,8 +17,10 @@ int32_t uart_init_cmsdk_apb (void* regs)
   1 - RX enable
   2 - TX interrupt enable
   3 - RX interrupt enable
+  4 - TX buffer overrun enable
+  5 - RX buffer overrun enable
   */
-  dev->CTRL = 0xF;
+  dev->CTRL = 0x3F;
 
   return 0;
 }
@@ -33,7 +36,8 @@ int32_t uart_tx_data_cmsdk_apb (void* regs, uint8_t* data, uint32_t count)
 {
   uint32_t sent_count;
 
-  sent_count               = 0;
+  sent_count = 0;
+
   CMSDK_APB_UART_TYPE* dev = (CMSDK_APB_UART_TYPE*)regs;
   while (count > 0)
     {

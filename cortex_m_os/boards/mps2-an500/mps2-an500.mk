@@ -157,7 +157,12 @@ OS_IMG: $(OS_DPENDENCIES)
 #   minicom -p /dev/pts/6
 # DO NOT use telnet, it sucks.
 
-QEMU_CMD_DEBUG = $(QEMU_ARM) -s -S -M $(QEMU_BOARD_NAME) -cpu $(QEMU_CPU) -m 16 -serial pty -device loader,file=$(OS_BIN)
+# QEMU_CMD_DEBUG = $(QEMU_ARM) -s -S -M $(QEMU_BOARD_NAME) -cpu $(QEMU_CPU) -m 16 -serial pty -device loader,file=$(OS_BIN)
+# QEMU_CMD_DEBUG = $(QEMU_ARM) -s -S -M $(QEMU_BOARD_NAME) -cpu $(QEMU_CPU) -m 16 -serial pty -device loader,file=$(OS_BIN)
+QEMU_CMD_DEBUG = $(QEMU_ARM) -s -S -M $(QEMU_BOARD_NAME) -cpu $(QEMU_CPU) -m 16 \
+					-chardev pty,id=myuart0 -serial chardev:myuart0 \
+					-chardev pty,id=myuart1 -serial chardev:myuart1 \
+					-device loader,file=$(OS_BIN)
 
 # With "-serial tcp:127.0.0.1:1124,server", the QEMU UART0 is mapped to port 1124.
 # I can use telnet 127.0.0.1 1124 to it. The press a key. Then don't forget to press the ENTER.
@@ -170,7 +175,12 @@ QEMU_CMD_DEBUG = $(QEMU_ARM) -s -S -M $(QEMU_BOARD_NAME) -cpu $(QEMU_CPU) -m 16 
 # QEMU_CMD_DEBUG = $(QEMU_ARM) -s -S -M $(QEMU_BOARD_NAME) -cpu $(QEMU_CPU) -m 16 -serial telnet:127.0.0.1:1124,server -device loader,file=$(OS_BIN)
 
 
-QEMU_CMD_RUN = $(QEMU_ARM) -s -M $(QEMU_BOARD_NAME) -cpu $(QEMU_CPU) -m 16 -serial pty -device loader,file=$(OS_BIN)
+# QEMU_CMD_RUN = $(QEMU_ARM) -s -M $(QEMU_BOARD_NAME) -cpu $(QEMU_CPU) -m 16 -serial pty -device loader,file=$(OS_BIN)
+QEMU_CMD_RUN = $(QEMU_ARM) -s -M $(QEMU_BOARD_NAME) -cpu $(QEMU_CPU) -m 16 \
+					-chardev pty,id=myuart0 -serial chardev:myuart0 \
+					-chardev pty,id=myuart1 -serial chardev:myuart1 \
+					-device loader,file=$(OS_BIN)
+
 # QEMU_CMD_DEBUG = $(QEMU_ARM) -s -S -M $(QEMU_BOARD_NAME) -cpu $(QEMU_CPU) -serial telnet:127.0.0.1:1124,server -kernel $(OS_BIN)
 # QEMU_CMD_RUN = $(QEMU_ARM) -s -M $(QEMU_BOARD_NAME) -cpu $(QEMU_CPU) -serial telnet:127.0.0.1:1124,server -kernel $(OS_BIN)
 
