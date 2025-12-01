@@ -160,26 +160,17 @@ Default_Handler:
     .endfunc
 
     // Peripheral Handlers
-Uart0_Rx_Handler:
+Uart_Handler:
     .func
     .thumb_func
-    .type Uart0_Rx_Handler, %function
-    .globl Uart0_Rx_Handler
+    .type Uart_Handler, %function
+    .globl Uart_Handler
+    @ save the EXC_RETURN value which is automatically held in LR
     push {lr}
-    bl  Uart_C_Handler_Rx
+    bl  Uart_C_Handler
+    @ restore the EXC_RETURN into PC, which triggers the exception return sequence
     pop {pc}
-    .size  Uart0_Rx_Handler, . - Uart0_Rx_Handler
-    .endfunc
-
-Uart0_Tx_Handler:
-    .func
-    .thumb_func
-    .type Uart0_Tx_Handler, %function
-    .globl Uart0_Tx_Handler
-    push {lr}
-    bl  Uart_C_Handler_Tx
-    pop {pc}
-    .size  Uart0_Tx_Handler, . - Uart0_Tx_Handler
+    .size  Uart_Handler, . - Uart_Handler
     .endfunc
 
     /*
@@ -219,12 +210,6 @@ Uart0_Tx_Handler:
     .weak      SysTick_Handler
     .thumb_set SysTick_Handler, Default_Handler
 
-    @ .weak      Uart0_Rx_Handler
-    @ .thumb_set Uart0_Rx_Handler, Uart_Handler
-
-    @ .weak      Uart0_Tx_Handler
-    @ .thumb_set Uart0_Tx_Handler, Uart_Handler
-
 
     // "ax": allocatable, executable
     .section .isr_vectors, "ax"
@@ -254,10 +239,21 @@ __isr_vectors:
     // External Interrupts -- This part varies between SoCs
     // TBD
     // check the user_define_cm7.h for the interrupt numbers
-    .long Uart0_Rx_Handler  // exception 16, IRQ 0
-    .long Uart0_Tx_Handler  // exception 17, IRQ 1
+    .long Uart_Handler  // exception 16, IRQ 0, UART0 RX
+    .long Uart_Handler  // exception 17, IRQ 1, UART0 TX
+    .long Uart_Handler  // exception 18, IRQ 2, UART1 RX
+    .long Uart_Handler  // exception 19, IRQ 3, UART1 TX
+    .long Uart_Handler  // exception 20, IRQ 4, UART2 RX
+    .long Uart_Handler  // exception 21, IRQ 5, UART2 TX
 
-    .space   (222 * 4)                          /* Interrupts 2 .. 224 are left out */
+    /*
+    The DUIO0646C spec says 0~239. Total 240.
+    The DDI0489F CortexM7 TRM also says "The NVIC supports up to 240 interrupts each with up to 256 levels of priority."
+    CMSIS 5 startup_ARMCM7.S says IRQn are from 0 ~ 224. Total 225. That's 240 minus 15 system exceptions.
+    I think the "interrupts" in DDI0489F should be "exceptions".
+
+    */
+    .space   (219 * 4)                          /* Interrupts 6 .. 224 are left out, that's 219 */
 __isr_vectors_end:
     .equ     __isr_vectors_size, __isr_vectors_end - __isr_vectors
     .size    __isr_vectors, . - __isr_vectors
