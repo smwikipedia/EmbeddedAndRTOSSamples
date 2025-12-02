@@ -131,7 +131,7 @@ __HeapLimit:
     Because of (3), I choose --gdwarf-5 in the mps2-an500.mk file.
      */
 Reset_Handler:
-    .func
+    .func Reset_Handler
     .thumb_func
     .type Reset_Handler, %function
     .globl Reset_Handler
@@ -151,7 +151,7 @@ Reset_Handler:
      */
     // "%function" is a type attribute of a symbol
 Default_Handler:
-    .func
+    .func Default_Handler
     .thumb_func
     .type Default_Handler, %function
     .globl Default_Handler
