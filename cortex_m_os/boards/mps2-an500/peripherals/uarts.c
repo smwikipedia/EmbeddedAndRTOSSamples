@@ -18,6 +18,8 @@ static void* uart_get_reg_block (uint32_t instance)
     case 0: return (void*)UART_0_BASE;
     case 1: return (void*)UART_1_BASE;
     case 2: return (void*)UART_2_BASE;
+    case 3: return (void*)UART_3_BASE;
+    case 4: return (void*)UART_4_BASE;
     default: DEAD_LOOP;
     }
   return 0;
@@ -110,6 +112,26 @@ void Uart_C_Handler (void)
       return Uart_C_Handler_Tx_Instance (UART_2);
     }
 
+  if (iabr & UART_3_RX_INT_ACTIVE_BIT)
+    {
+      return Uart_C_Handler_Rx_Instance (UART_3);
+    }
+
+  if (iabr & UART_3_TX_INT_ACTIVE_BIT)
+    {
+      return Uart_C_Handler_Tx_Instance (UART_3);
+    }
+
+  if (iabr & UART_4_RX_INT_ACTIVE_BIT)
+    {
+      return Uart_C_Handler_Rx_Instance (UART_4);
+    }
+
+  if (iabr & UART_4_TX_INT_ACTIVE_BIT)
+    {
+      return Uart_C_Handler_Tx_Instance (UART_4);
+    }
+
   // One of the three UARTs 0/1/2 get overrun
   if (iabr & UART_0_1_2_OVERRUN_IRQN)
     {
@@ -187,10 +209,13 @@ static void Uart_012_C_Handler_Overrun_Instance (uint32_t instance)
 }
 
 /*
- The overrun interrupt doesn't tell which UART has overrun, we check them one by one.
+ The overrun interrupt doesn't tell which UART has overrun, we have to check them one by one.
  We check if it is Rx/Tx overrun.
  For Rx overrun, drain the data.
  For Tx overrun, busy wait.
+
+ The mps2-an500 board only have overrun interrupt for UART0/1/2.
+ None for 4/5.
 */
 static void Uart_012_C_Handler_Overrun (void)
 {
