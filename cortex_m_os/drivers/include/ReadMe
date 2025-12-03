@@ -1,4 +1,0 @@
-A device's type is defined by its interface.
-Each device type's interface is represented by a header file.
-
-Peripherals include both on-chip and off-chip/external ones.
