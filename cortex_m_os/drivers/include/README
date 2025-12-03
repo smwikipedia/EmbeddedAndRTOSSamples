@@ -1,0 +1,10 @@
+Peripherals include both on-chip and off-chip/external ones.
+
+A peripheral's type is defined by its interface.
+Each peripheral type's interface is represented by a header file.
+
+For each type of peripheral, I have one header for each specific model.
+For example, for UART, I have cmsdk_apb_uart.h, ns16550.h, pl011.h.
+This is because there can be multiple models of UART on a board.
+If I have a single name for a function, such as `uart_init()`, it will
+cause linking error when linking multiple UART drivers together.
