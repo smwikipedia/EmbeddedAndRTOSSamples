@@ -76,10 +76,10 @@ void Uart_C_Handler (void)
   uint32_t iabr = NVIC->IABR[0];
   // DO NOT mix the handling of RX and TX in the same function.
 
-  // Only one of the if conditions below will be entered for one call to the
-  // Uart_C_Handler(). Because all the UARTs' Tx/Rx interrupt has the same
-  // priority. Only one interrupt will be triggered for ONE UART's Tx OR Rx
-  // interrupt. To reduce time, return in each if block.
+  // Only one of the if conditions below will be entered for one call to the Uart_C_Handler().
+  // Because all the UARTs' Tx/Rx interrupt has the same priority.
+  // Only one interrupt will be triggered for ONE UART's Tx OR Rx interrupt.
+  // To reduce time, return in each if block.
   if (iabr & UART_0_RX_INT_ACTIVE_BIT)
     {
       return Uart_C_Handler_Rx_Instance (UART_0);
@@ -144,8 +144,8 @@ static void Uart_C_Handler_Rx_Instance (uint32_t instance)
         }
     }
 
-  // Since the Rx buffer is not full now, always write 1 to clear the RX buffer
-  // overrun state. Even there's no buffer overrun.
+  // Since the Rx buffer is not full now, always write 1 to clear the RX buffer overrun state.
+  // Even there's no buffer overrun.
   regs->STATE = RX_BUFFER_OVERRUN_MASK;
 
   // Write 1 to clear the RX interrupt status.
@@ -168,8 +168,8 @@ static void Uart_C_Handler_Tx_Instance (uint32_t instance)
       ;
     }
 
-  // Since the Tx buffer is not full now, always write 1 to clear the Tx buffer
-  // overrun state. Even there's no buffer overrun.
+  // Since the Tx buffer is not full now, always write 1 to clear the Tx buffer overrun state.
+  // Even there's no buffer overrun.
   regs->STATE = TX_BUFFER_OVERRUN_MASK;
 
   // Write 1 to clear the TX interrupt status.
