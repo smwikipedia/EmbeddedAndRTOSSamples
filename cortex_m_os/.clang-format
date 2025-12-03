@@ -209,7 +209,7 @@ BreakConstructorInitializersBeforeComma: false
 # ColumnLimit (unsigned)
 # The column limit.
 # A column limit of 0 means that there is no column limit. In this case, clang-format will respect the input’s line breaking decisions within statements unless they contradict other rules.
-ColumnLimit: 80
+ColumnLimit: 0
 
 # CommentPragmas (std::string)
 # A regular expression that describes comments with special meaning, which should not be split into lines or otherwise changed.
@@ -405,3 +405,5 @@ SpacesInParentheses: false
 # SpacesInSquareBrackets (bool)
 # If true, spaces will be inserted after [ and before ].
 SpacesInSquareBrackets: false
+
+IndentPPDirectives: None
