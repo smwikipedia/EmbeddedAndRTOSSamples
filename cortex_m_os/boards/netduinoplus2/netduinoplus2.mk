@@ -3,7 +3,7 @@
 #
 RMDIR = rm -r -f
 MKDIR = mkdir -p
-CLANG_FORMAT = clang-format-15
+CLANG_FORMAT = clang-format-22
 
 #
 # Board config
@@ -166,4 +166,4 @@ RUN : REBUILD
 	$(QEMU_CMD_RUN)
 
 FORMAT:
-	@find . -name "*.c" -o -name "*.h" | xargs $(CLANG_FORMAT) -i --style=file:.clang-format
+	@find . -name "*.c" -o -name "*.h" | xargs $(CLANG_FORMAT) -i --style=file
