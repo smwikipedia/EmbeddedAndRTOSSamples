@@ -1,3 +1,16 @@
+/*
+This is board-specific code. So it can leverage the full knowledge of mps2-an500 board.
+
+Why this board layer when we already have the drivers for all kinds of peripherals?
+The board layer exposes peripheral API based on the logical instance number of peripherals on a board.
+The logical instance number is translated into the register block address for that instance.
+And then lower layer peripheral drivers are called.
+
+On top of the board layer are the kernel or subsys layers.
+The board layer hides the hardware details and provide a logical interface to the upper layers.
+
+*/
+
 #include <stdint.h>
 #include <board_api.h>
 #include <user_define_cm7.h>
