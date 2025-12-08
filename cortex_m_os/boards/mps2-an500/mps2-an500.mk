@@ -35,6 +35,7 @@ HAL_DIR = $(WORKSPACE)/hal
 CMSIS_DIR = $(HAL_DIR)/cmsis
 DRIVERS_DIR = $(WORKSPACE)/drivers
 KERNEL_DIR = $(WORKSPACE)/kernel
+ALGO_DIR = $(WORKSPACE)/algorithm
 # RESET_DIR = $(WORKSPACE)/reset
 
 
@@ -64,10 +65,12 @@ OBJCOPY_FLAGS = -O binary
 
 
 INCLUDES = \
+    -I $(WORKSPACE)/include \
     -I $(BOARDS_DIR)/include \
     -I $(BOARD_DIR)/include \
     -I $(CMSIS_DIR)/include/ \
     -I $(DRIVERS_DIR)/include \
+    -I $(ALGO_DIR)/include \
     -I $(TOOL_CHAIN_DIR_1)/include \
     -I $(TOOL_CHAIN_DIR_2)/include
 
@@ -95,10 +98,13 @@ SRCS_BOARD = $(shell find $(BOARD_DIR) -name "*.c")
 # drivers/*.c
 SRCS_DRIVERS = $(shell find $(DRIVERS_DIR)/uart/cmsdk_apb_uart -name "*.c")
 
+# algorithm/*.c
+SRCS_ALGO = $(shell find $(ALGO_DIR) -name "*.c")
+
 # kernel/*.c
 SRCS_KERNEL = $(shell find $(KERNEL_DIR) -name "*.c")
 
-ALL_C_SRCS = $(SRCS_BOARD) $(SRCS_KERNEL) $(SRCS_DRIVERS)
+ALL_C_SRCS = $(SRCS_BOARD) $(SRCS_DRIVERS) $(SRCS_ALGO) $(SRCS_KERNEL)
 ALL_C_OBJS = $(patsubst $(WORKSPACE)/%.c,$(BUILD_DIR)/%.o,$(ALL_C_SRCS))
 
 

@@ -52,8 +52,8 @@
 #define TX_BUFFER_FULL_FLAG 0x1    // ro - automatically, set when no space, clear when there's space (QEMU behavior)
 
 // Interrupt State and Clear register
-#define RX_OVERRUN_INT_FLAG 0x8 // rw
-#define TX_OVERRUN_INT_FLAG 0x4 // rw
+#define RX_OVERRUN_INT_FLAG 0x8 // rw  Conventionally, it generally means the UART has received some data and ready to be consumed.
+#define TX_OVERRUN_INT_FLAG 0x4 // rw  DDI0479D doesn't say what it means. Conventionally, it generally means the UART is ready to transmit more data.
 #define RX_INT_FLAG 0x2         // rw
 #define TX_INT_FLAG 0x1         // rw
 
@@ -85,8 +85,9 @@ typedef struct
 */
 
 int32_t uart_init_cmsdk_apb (UART_REGS_CMSDK_APB* regs);
-uint8_t uart_rx_data_cmsdk_apb (UART_REGS_CMSDK_APB* regs);
-int32_t uart_tx_data_cmsdk_apb (UART_REGS_CMSDK_APB* regs, uint8_t* data, uint32_t count);
+
+// uint8_t uart_rx_data_cmsdk_apb (UART_REGS_CMSDK_APB* regs);
+// int32_t uart_tx_data_cmsdk_apb (UART_REGS_CMSDK_APB* regs, uint8_t* data, uint32_t count);
 
 /*
   Check if the transfer buffer is overrun.
@@ -96,6 +97,15 @@ int32_t uart_tx_data_cmsdk_apb (UART_REGS_CMSDK_APB* regs, uint8_t* data, uint32
   1 - overrun
 */
 int32_t uart_tx_buffer_overrun_cmsdk_apb (const UART_REGS_CMSDK_APB* regs);
+void uart_tx_buffer_overrun_clear_cmsdk_apb (UART_REGS_CMSDK_APB* const regs);
+int32_t uart_rx_buffer_overrun_cmsdk_apb (const UART_REGS_CMSDK_APB* regs);
+void uart_rx_buffer_overrun_clear_cmsdk_apb (UART_REGS_CMSDK_APB* const regs);
+
+void uart_irq_tx_clear_cmsdk_apb (UART_REGS_CMSDK_APB* const regs);
+void uart_irq_rx_clear_cmsdk_apb (UART_REGS_CMSDK_APB* const regs);
+void uart_irq_tx_overrun_clear_cmsdk_apb (UART_REGS_CMSDK_APB* const regs);
+void uart_irq_rx_overrun_clear_cmsdk_apb (UART_REGS_CMSDK_APB* const regs);
+
 
 /*
  Zephyr RTOS UART interrupt-driven UART API
@@ -168,16 +178,6 @@ void uart_irq_tx_disable_cmsdk_apb_uart (const UART_REGS_CMSDK_APB* regs);
 int32_t uart_irq_tx_ready_cmsdk_apb_uart (const UART_REGS_CMSDK_APB* regs);
 
 /*
- Enable RX interrupt.
-*/
-void uart_irq_rx_enable_cmsdk_apb_uart (UART_REGS_CMSDK_APB* const regs);
-
-/*
- Disable RX interrupt.
-*/
-void uart_irq_rx_disable_cmsdk_apb_uart (UART_REGS_CMSDK_APB* const regs);
-
-/*
 Check if UART TX block finished transmission.
 
 Check if any outgoing data buffered in UART TX block was fully transmitted and TX block is idle.
@@ -187,6 +187,16 @@ This function must be called in a UART interrupt handler, or its result is undef
 Before calling this function in the interrupt handler, uart_irq_update() must be called once per the handler invocation.
 */
 int32_t uart_irq_tx_complete_cmsdk_apb_uart (const UART_REGS_CMSDK_APB* regs);
+
+/*
+ Enable RX interrupt.
+*/
+void uart_irq_rx_enable_cmsdk_apb_uart (UART_REGS_CMSDK_APB* const regs);
+
+/*
+ Disable RX interrupt.
+*/
+void uart_irq_rx_disable_cmsdk_apb_uart (UART_REGS_CMSDK_APB* const regs);
 
 
 /*

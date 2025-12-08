@@ -211,6 +211,26 @@ Uart_Handler:
     .thumb_set SysTick_Handler, Default_Handler
 
 
+disable_interrupt:
+    .func disable_interrupt
+    .thumb_func
+    .type disable_interrupt, %function
+    .globl disable_interrupt
+    // TBD
+    bx lr
+    .endfunc
+
+enable_interrupt:
+    .func enable_interrupt
+    .thumb_func
+    .type enable_interrupt, %function
+    .globl enable_interrupt
+    // TBD
+    bx lr
+    .endfunc
+
+
+
     // "ax": allocatable, executable
     .section .isr_vectors, "ax"
     .align 2
