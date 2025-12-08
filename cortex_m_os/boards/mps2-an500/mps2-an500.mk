@@ -28,12 +28,13 @@ UART_MODEL = cmsdk_apb_uart
 # Build config
 #
 WORKSPACE = .
+BUILD_DIR = $(WORKSPACE)/build
 BOARDS_DIR = $(WORKSPACE)/boards
 BOARD_DIR = $(BOARDS_DIR)/$(QEMU_BOARD_NAME)
-BUILD_DIR = $(WORKSPACE)/build
 HAL_DIR = $(WORKSPACE)/hal
 CMSIS_DIR = $(HAL_DIR)/cmsis
 DRIVERS_DIR = $(WORKSPACE)/drivers
+KERNEL_DIR = $(WORKSPACE)/kernel
 # RESET_DIR = $(WORKSPACE)/reset
 
 
@@ -74,65 +75,47 @@ INCLUDES = \
 LD_SCRIPT = $(BOARD_DIR)/$(QEMU_BOARD_NAME).ld
 
 
-#
-# board
-#
-
 # start up mcu
 START_UP = startup
 # the suffix must be "S" rather than "s" if the file contains preprocessor directives.
 # ref: https://stackoverflow.com/a/51110745/264052
+# if the startup.S contains preprocessor directive like #include.
+# we have to use gcc rather than as directly.
+# $(AS) $(AS_FLAGS) $(SRC_START_UP) -o $(OBJ_START_UP)
 SRC_START_UP = $(BOARD_DIR)/core/$(START_UP).S
 OBJ_START_UP = $(BUILD_DIR)/$(START_UP).o
 $(OBJ_START_UP) : $(SRC_START_UP)
-	echo "build startup assembly"
-	# if the startup.S contains preprocessor directive like #include.
-	# we have to use gcc rather than as directly.
-	# $(AS) $(AS_FLAGS) $(SRC_START_UP) -o $(OBJ_START_UP)
+	@echo "Building startup assembly"
 	$(CC) $(GCC_FLAGS_STARTUP) $(SRC_START_UP) -o $(OBJ_START_UP)
 
-# system init
-SRC_SYSTEM_INIT = $(BOARD_DIR)/core/SystemInit.c
-OBJ_SYSTEMINIT = $(BUILD_DIR)/SystemInit.o
-$(OBJ_SYSTEMINIT) : $(SRC_SYSTEM_INIT)
-	echo "build kernel SystemInit"
-	$(CC) $(GCC_FLAGS) $(SRC_SYSTEM_INIT) -o $(OBJ_SYSTEMINIT)
 
-# kernel
-KERNEL_DIR = $(WORKSPACE)/kernel/
-SRC_KERNEL = $(KERNEL_DIR)/main.c
-OBJ_KERNEL = $(BUILD_DIR)/kernel.o
-$(OBJ_KERNEL) : $(SRC_KERNEL)
-	echo "build kernel main"
-	$(CC) $(GCC_FLAGS) $(SRC_KERNEL) -o $(OBJ_KERNEL)
+# boards/*.c e.g. boards/mps2-an500/peripherals/uarts.c
+SRCS_BOARD = $(shell find $(BOARD_DIR) -name "*.c")
+
+# drivers/*.c
+SRCS_DRIVERS = $(shell find $(DRIVERS_DIR)/uart/cmsdk_apb_uart -name "*.c")
+
+# kernel/*.c
+SRCS_KERNEL = $(shell find $(KERNEL_DIR) -name "*.c")
+
+ALL_C_SRCS = $(SRCS_BOARD) $(SRCS_KERNEL) $(SRCS_DRIVERS)
+ALL_C_OBJS = $(patsubst $(WORKSPACE)/%.c,$(BUILD_DIR)/%.o,$(ALL_C_SRCS))
 
 
-# drivers
-SRC_UART_DRIVER = $(DRIVERS_DIR)/uart/$(UART_MODEL)/$(UART_MODEL).c
-OBJ_UART_DRIVER = $(BUILD_DIR)/$(UART_MODEL).o
-$(OBJ_UART_DRIVER) : $(SRC_UART_DRIVER)
-	echo "build uart driver"
-	$(CC) $(GCC_FLAGS) $(SRC_UART_DRIVER) -o $(OBJ_UART_DRIVER)
-
-
-# peripherals
-SRC_UARTS = $(BOARD_DIR)/peripherals/uarts.c
-OBJ_UARTS = $(BUILD_DIR)/uarts.o
-$(OBJ_UARTS) : $(SRC_UARTS)
-	echo "build board uarts"
-	$(CC) $(GCC_FLAGS) $(SRC_UARTS) -o $(OBJ_UARTS)
+$(BUILD_DIR)/%.o : $(WORKSPACE)/%.c
+	@echo "Compiling $< to $@"
+	@mkdir -p $(dir $@)
+	$(CC) $(GCC_FLAGS) $< -o $@
 
 #
 # OS image
 #
 OS_ELF = $(BUILD_DIR)/os.elf
 OS_BIN = $(BUILD_DIR)/os.bin
-OS_DPENDENCIES = $(OBJ_START_UP) $(OBJ_SYSTEMINIT) $(OBJ_KERNEL) $(OBJ_UART_DRIVER) $(OBJ_UARTS)
+OS_DPENDENCIES = $(OBJ_START_UP) $(ALL_C_OBJS)
 OS_IMG: $(OS_DPENDENCIES)
-	$(LD) $(OS_DPENDENCIES) $(LD_FLAGS) -o $(OS_ELF)
+	$(LD) $(LD_FLAGS) $(OS_DPENDENCIES) -o $(OS_ELF)
 	$(OBJCOPY) $(OBJCOPY_FLAGS) $(OS_ELF) $(OS_BIN)
-
-
 
 
 #
