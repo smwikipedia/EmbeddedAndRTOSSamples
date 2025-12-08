@@ -1,33 +1,34 @@
 #ifndef UART_COMMON_H
 #define UART_COMMON_H
 
+#include "ring_buffer.h"
 #include <stdint.h>
+#include <data_structures.h>
 
-#define UART_BUFFER_LEN 32
 
-typedef struct
+typedef int32_t (*process_t) (RING_BUFFER* buffer, uint8_t c);
+
+typedef struct _UART_CLASS
 {
   void* regs;
 
-  /*
-  These buffers are the communication channel between the UART user and the UART driver.
-  */
-  uint8_t rx_buffer[UART_BUFFER_LEN];
-  uint8_t tx_buffer[UART_BUFFER_LEN];
+  // Indicating if hw is transmitting data from the buffer
+  // Only hardware driver can set/clear it. Upper layer read it.
+  uint32_t buffered_tx;
 
   /*
-    rx_head points to the next space to hold the data received.
-    rx_tail points to the first data to return.
-    rx_head is ahead of rx_tail.
+  These buffers are the communication channel shared between the UART user and the UART driver.
+  Access to such shared resource must be exclusive.
   */
-  uint8_t rx_head, rx_tail;
-  /*
-    tx_head points to the next space to hold the data to send.
-    tx_tail points to the first data to send.
-    tx_head is ahead of tx_tail.
-  */
-  uint8_t tx_head, tx_tail;
+  RING_BUFFER rx;
+  RING_BUFFER tx;
 
+
+  /*
+  Add data to ring buffer and process the ring buffer.
+  Such as line discipline.
+  */
+  process_t fn_process;
 
 } UART_CLASS;
 

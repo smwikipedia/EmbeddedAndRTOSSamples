@@ -1,6 +1,8 @@
 #include "drivers_common.h"
+#include <error_no.h>
 #include <stdint.h>
 #include <uart/cmsdk_apb_uart.h>
+#include <utils.h>
 
 int32_t uart_init_cmsdk_apb (UART_REGS_CMSDK_APB* regs)
 {
@@ -19,32 +21,37 @@ int32_t uart_init_cmsdk_apb (UART_REGS_CMSDK_APB* regs)
   4 - TX buffer overrun enable
   5 - RX buffer overrun enable
   */
-  regs->CTRL = 0x3F;
+  regs->CTRL = (BIT (TX_ENABLE_BIT) |
+  BIT (RX_ENABLE_BIT) |
+  BIT (TX_INT_ENABLE_BIT) |
+  BIT (RX_INT_ENABLE_BIT) |
+  BIT (TX_OVERRUN_INT_ENABLE_BIT) |
+  BIT (RX_OVERRUN_INT_ENABLE_BIT));
 
   return 0;
 }
 
-uint8_t uart_rx_data_cmsdk_apb (UART_REGS_CMSDK_APB* regs)
-{
-  uint8_t c = regs->DATA & 0xFF;
-  return c;
-}
+// uint8_t uart_rx_data_cmsdk_apb (UART_REGS_CMSDK_APB* regs)
+// {
+//   uint8_t c = regs->DATA & 0xFF;
+//   return c;
+// }
 
-int32_t uart_tx_data_cmsdk_apb (UART_REGS_CMSDK_APB* regs, uint8_t* data, uint32_t count)
-{
-  uint32_t sent_count;
+// int32_t uart_tx_data_cmsdk_apb (UART_REGS_CMSDK_APB* regs, uint8_t* data, uint32_t count)
+// {
+//   uint32_t sent_count;
 
-  sent_count = 0;
+//   sent_count = 0;
 
-  while (count > 0)
-    {
-      regs->DATA = data[sent_count];
-      count--;
-      sent_count++;
-    }
+//   while (count > 0)
+//     {
+//       regs->DATA = data[sent_count];
+//       count--;
+//       sent_count++;
+//     }
 
-  return sent_count;
-}
+//   return sent_count;
+// }
 
 int32_t uart_tx_buffer_overrun_cmsdk_apb (const UART_REGS_CMSDK_APB* regs)
 {
@@ -56,6 +63,51 @@ int32_t uart_tx_buffer_overrun_cmsdk_apb (const UART_REGS_CMSDK_APB* regs)
   return 0;
 }
 
+int32_t uart_rx_buffer_overrun_cmsdk_apb (const UART_REGS_CMSDK_APB* regs)
+{
+  if (regs->STATE & RX_BUFFER_OVERRUN_FLAG)
+    {
+      return 1;
+    }
+
+  return 0;
+}
+
+void uart_tx_buffer_overrun_clear_cmsdk_apb (UART_REGS_CMSDK_APB* const regs)
+{
+  // Write 1 to clear the TX overrun STATE.
+  regs->STATE = TX_BUFFER_OVERRUN_FLAG;
+}
+
+void uart_rx_buffer_overrun_clear_cmsdk_apb (UART_REGS_CMSDK_APB* const regs)
+{
+  // Write 1 to clear the RX overrun STATE.
+  regs->STATE = RX_BUFFER_OVERRUN_FLAG;
+}
+
+void uart_irq_tx_clear_cmsdk_apb (UART_REGS_CMSDK_APB* const regs)
+{
+  // Write 1 to clear the TX interrupt status.
+  regs->INTSTS_CLR = TX_INT_FLAG;
+}
+
+void uart_irq_rx_clear_cmsdk_apb (UART_REGS_CMSDK_APB* const regs)
+{
+  // Write 1 to clear the RX interrupt status.
+  regs->INTSTS_CLR = RX_INT_FLAG;
+}
+
+void uart_irq_tx_overrun_clear_cmsdk_apb (UART_REGS_CMSDK_APB* const regs)
+{
+  // Write 1 to clear the TX overrun interrupt status.
+  regs->INTSTS_CLR = TX_OVERRUN_INT_FLAG;
+}
+
+void uart_irq_rx_overrun_clear_cmsdk_apb (UART_REGS_CMSDK_APB* const regs)
+{
+  // Write 1 to clear the RX overrun interrupt status.
+  regs->INTSTS_CLR = RX_OVERRUN_INT_FLAG;
+}
 
 /*
 Zephyr RTOS UART interrupt-driven APIs
@@ -66,7 +118,7 @@ int32_t uart_fifo_fill_cmsdk_apb_uart (UART_REGS_CMSDK_APB* const regs, const ui
   uint32_t sent_count;
 
   sent_count = 0;
-  while (!uart_tx_buffer_overrun_cmsdk_apb (regs) && size > 0)
+  while (uart_irq_tx_ready_cmsdk_apb_uart (regs) && size > 0)
     {
       regs->DATA = tx_data[sent_count];
       size--;
@@ -89,6 +141,29 @@ int32_t uart_fifo_read_cmsdk_apb_uart (const UART_REGS_CMSDK_APB* regs, uint8_t*
     }
 
   return read_count;
+}
+
+
+/*
+Enable TX interrupt
+*/
+void uart_irq_tx_enable_cmsdk_apb_uart (UART_REGS_CMSDK_APB* const regs)
+{
+  uint8_t value = regs->CTRL;
+
+  value |= BIT (TX_INT_ENABLE_BIT);
+  regs->CTRL = value;
+}
+
+/*
+Disable TX interrupt
+*/
+void uart_irq_tx_disable_cmsdk_apb_uart (UART_REGS_CMSDK_APB* const regs)
+{
+  uint8_t value = regs->CTRL;
+
+  value &= BIT_NOT (TX_INT_ENABLE_BIT);
+  regs->CTRL = value;
 }
 
 
@@ -123,16 +198,39 @@ int32_t uart_irq_tx_ready_cmsdk_apb_uart (const UART_REGS_CMSDK_APB* regs)
     }
 }
 
-void uart_irq_rx_enable_cmsdk_apb_uart (UART_REGS_CMSDK_APB* const regs)
+int32_t uart_irq_tx_complete_cmsdk_apb_uart (const UART_REGS_CMSDK_APB* regs)
 {
-  // Enabling RX interrupt implies enabling RX.
-  uint8_t bit_mask = (RX_INT_ENABLE_BIT | RX_ENABLE_BIT);
-  regs->CTRL       = (regs->CTRL | bit_mask);
+  // Unfortunately, from the cmsdk_apb_uart STATE register, I cannot tell when the TX buffer is empty.
+  // I may use TX buffer ready as a best effort.\
+  // But I choose to return -ENOTSUP.
+
+  // return uart_irq_tx_ready_cmsdk_apb_uart(regs);
+  return -ENOTSUP;
 }
 
+/*
+Enable RX interrupt.
+*/
+void uart_irq_rx_enable_cmsdk_apb_uart (UART_REGS_CMSDK_APB* const regs)
+{
+  // Just disable rx interrupt, do not enable rx implicitly!
+  // Stick to the semantic!
+  uint8_t value = regs->CTRL;
+
+  value |= BIT (RX_INT_ENABLE_BIT);
+  regs->CTRL = value;
+}
+
+/*
+Disable RX interrupt.
+*/
 void uart_irq_rx_disable_cmsdk_apb_uart (UART_REGS_CMSDK_APB* const regs)
 {
-  // Disabling RX interrupt implies disabling RX.
-  uint8_t bit_mask = (RX_INT_ENABLE_BIT | RX_ENABLE_BIT);
-  regs->CTRL       = (regs->CTRL & (~bit_mask));
+  // Just disable rx interrupt, do not disable rx implicitly!
+  // Stick to the semantic!
+  uint8_t value;
+
+  value = regs->CTRL;
+  value &= BIT_NOT (RX_INT_ENABLE_BIT);
+  regs->CTRL = value;
 }

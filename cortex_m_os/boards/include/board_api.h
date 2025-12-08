@@ -36,7 +36,26 @@ And call the correct model-specific API to init it.
 int32_t board_uart_init (uint32_t instance);
 
 
-int32_t board_uart_tx_data (uint32_t instance, uint8_t* data, uint32_t count);
+/*
+ Write a single char to UART instance.
+*/
+void board_uart_write_byte (uint32_t instance, uint8_t c);
+
+/*
+ data: buffer with the data to send
+ count: the size of the data to send in byte
+
+ ret: 0 success, otherwise fail
+*/
+int32_t board_uart_write (uint32_t instance, uint8_t* data, uint32_t size);
+
+/*
+data: buffer to hold the data received.
+count: the buffer size in byte.
+
+ret: actual size of received data in byte.
+*/
+int32_t board_uart_read (uint32_t instance, uint8_t* buffer, uint32_t size);
 
 
 #endif

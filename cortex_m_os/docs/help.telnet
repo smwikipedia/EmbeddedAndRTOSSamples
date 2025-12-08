@@ -1,0 +1,18 @@
+#### How telnet communicate with QEMU?
+
+1) Map a QEMU uart to tcp port, and connect telnet to the QEMU port.
+```
+-serial tcp:127.0.0.1:1124,server
+```
+
+2) Input a char 'x' into telnet, you must press "enter" to commit the input.
+The actual input sequence sent to server is 'x\r\n'.
+
+3) telnet itself will display the char sequence 'x\r\n' BEFORE receiving echo back
+from the QEMU uart.
+
+4) QEMU echo back the sequence 'x\r\n'.
+
+5) telnet display the newly received sequence 'x\r\n'.
+
+
