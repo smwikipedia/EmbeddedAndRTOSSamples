@@ -2,7 +2,7 @@
  The interface to the cmsdk_apb_uart IP.
 
  The interface design use the Zephyr RTOS UART interrupt-driven UART API as a reference.
- Refer to below link for tha API semantic.
+ Refer to below link for the API semantic.
  https://docs.zephyrproject.org/latest/doxygen/html/group__uart__interrupt.html
 
  The function semantic comment is adopted from above link.
@@ -32,6 +32,7 @@
 /*
   CTRL register
 */
+#define CTRL_MASK 0x7f
 #define TX_ENABLE_BIT 0
 #define RX_ENABLE_BIT 1
 #define TX_INT_ENABLE_BIT 2
@@ -46,16 +47,20 @@
   Should use the state bits to track the state and take actions accordingly.
   When action is done, change the interrupt bits accordingly.
 */
-#define RX_BUFFER_OVERRUN_FLAG 0x8 // rw
-#define TX_BUFFER_OVERRUN_FLAG 0x4 // rw
-#define RX_BUFFER_FULL_FLAG 0x2    // ro - automatically, set when there's data, clear when no more data (QEMU behavior)
-#define TX_BUFFER_FULL_FLAG 0x1    // ro - automatically, set when no space, clear when there's space (QEMU behavior)
+#define STATE_MASK 0xF
+#define RX_BUFFER_OVERRUN_BIT 3 // rw
+#define TX_BUFFER_OVERRUN_BIT 2 // rw
+#define RX_BUFFER_FULL_BIT 1    // ro - automatically, set when there's data, clear when no more data (QEMU behavior)
+#define TX_BUFFER_FULL_BIT 0    // ro - automatically, set when no space, clear when there's space (QEMU behavior)
 
-// Interrupt State and Clear register
-#define RX_OVERRUN_INT_FLAG 0x8 // rw  Conventionally, it generally means the UART has received some data and ready to be consumed.
-#define TX_OVERRUN_INT_FLAG 0x4 // rw  DDI0479D doesn't say what it means. Conventionally, it generally means the UART is ready to transmit more data.
-#define RX_INT_FLAG 0x2         // rw
-#define TX_INT_FLAG 0x1         // rw
+/*
+  Interrupt Status and Clear register
+*/
+#define INT_STATUS_CLEAR_MASK 0xF
+#define RX_OVERRUN_INT_BIT 3 // rw  Conventionally, it generally means the UART has received some data and ready to be consumed.
+#define TX_OVERRUN_INT_BIT 2 // rw  DDI0479D doesn't say what it means. Conventionally, it generally means the UART is ready to transmit more data.
+#define RX_INT_BIT 1         // rw
+#define TX_INT_BIT 0         // rw
 
 typedef struct
 {
@@ -97,15 +102,25 @@ int32_t uart_init_cmsdk_apb (UART_REGS_CMSDK_APB* regs);
   1 - overrun
 */
 int32_t uart_tx_buffer_overrun_cmsdk_apb (const UART_REGS_CMSDK_APB* regs);
-void uart_tx_buffer_overrun_clear_cmsdk_apb (UART_REGS_CMSDK_APB* const regs);
 int32_t uart_rx_buffer_overrun_cmsdk_apb (const UART_REGS_CMSDK_APB* regs);
+
+// clear buffer overrun state
+void uart_tx_buffer_overrun_clear_cmsdk_apb (UART_REGS_CMSDK_APB* const regs);
 void uart_rx_buffer_overrun_clear_cmsdk_apb (UART_REGS_CMSDK_APB* const regs);
 
+// clear interrupt status
 void uart_irq_tx_clear_cmsdk_apb (UART_REGS_CMSDK_APB* const regs);
 void uart_irq_rx_clear_cmsdk_apb (UART_REGS_CMSDK_APB* const regs);
 void uart_irq_tx_overrun_clear_cmsdk_apb (UART_REGS_CMSDK_APB* const regs);
 void uart_irq_rx_overrun_clear_cmsdk_apb (UART_REGS_CMSDK_APB* const regs);
 
+// enable/disable rx and tx functions
+void uart_tx_enable_cmsdk_apb_uart (UART_REGS_CMSDK_APB* const regs);
+void uart_tx_disable_cmsdk_apb_uart (UART_REGS_CMSDK_APB* const regs);
+void uart_rx_enable_cmsdk_apb_uart (UART_REGS_CMSDK_APB* const regs);
+void uart_rx_disable_cmsdk_apb_uart (UART_REGS_CMSDK_APB* const regs);
+int32_t uart_rx_buffer_full_cmsdk_apb_uart (UART_REGS_CMSDK_APB* const regs);
+int32_t uart_tx_buffer_full_cmsdk_apb_uart (UART_REGS_CMSDK_APB* const regs);
 
 /*
  Zephyr RTOS UART interrupt-driven UART API
@@ -227,6 +242,9 @@ int32_t uart_irq_rx_ready_cmsdk_apb_uart (const UART_REGS_CMSDK_APB* regs);
 
 void uart_irq_err_enable_cmsdk_apb_uart (const UART_REGS_CMSDK_APB* regs);
 void uart_irq_err_disable_cmsdk_apb_uart (const UART_REGS_CMSDK_APB* regs);
+/*
+Check if any IRQs is pending.
+*/
 int32_t uart_irq_is_pending_cmsdk_apb_uart (const UART_REGS_CMSDK_APB* regs);
 
 /*

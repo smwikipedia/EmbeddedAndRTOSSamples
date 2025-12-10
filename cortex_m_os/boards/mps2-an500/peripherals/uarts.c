@@ -27,13 +27,19 @@ In both cases, ALWAYS ONLY ONE PARTY operates on the shared data.
 This paradigm makes it easier to think.
 
 3) Disable/Enable the interrupts at the NVIC level. Not the UART device.
-As I tried, if I disable/enable interrupts in the UART device, it will jeopardize the UART's internal working.
-That is, do not use "uart_irq_tx_disable_cmsdk_apb_uart()".
-Use "nvic_switch_uart_tx_int()".
+As I tried, if I disable/enable interrupts in the UART device, QEMU UART won't work.
+Maybe there's a bug in the QEMU implementaion: https://gitlab.com/qemu-project/qemu/-/issues/3244
+
+Grok AI also suggests that, to handle the quick interrupt on/off scenarios, disable/enable the interrupt at the NVIC level instead.
+This masks the interrupt at the interrupt controller while preserving the peripheral's assertion state.
+So unmasking the NVIC will trigger an interrupt if the condition is still active.
+This approach is standard best pracitce in ARM systems and avoids the peripheral-specific quirks.
+
+So, I will do it with "nvic_switch_uart_tx_int()".
+Not the "uart_irq_tx_disable_cmsdk_apb_uart()", etc.
 
 */
 
-#include "ring_buffer.h"
 #include <stdint.h>
 #include <board_api.h>
 #include <user_define_cm7.h>
@@ -58,14 +64,19 @@ static void nvic_switch_uart_rx_int (uint32_t instance, uint32_t on)
     {
     case UART_0:
       (on == 1) ? NVIC_EnableIRQ (NVIC_UART_0_RX_IRQN) : NVIC_DisableIRQ (NVIC_UART_0_RX_IRQN);
+      break;
     case UART_1:
       (on == 1) ? NVIC_EnableIRQ (NVIC_UART_1_RX_IRQN) : NVIC_DisableIRQ (NVIC_UART_1_RX_IRQN);
+      break;
     case UART_2:
       (on == 1) ? NVIC_EnableIRQ (NVIC_UART_2_RX_IRQN) : NVIC_DisableIRQ (NVIC_UART_2_RX_IRQN);
+      break;
     case UART_3:
       (on == 1) ? NVIC_EnableIRQ (NVIC_UART_3_RX_IRQN) : NVIC_DisableIRQ (NVIC_UART_3_RX_IRQN);
+      break;
     case UART_4:
       (on == 1) ? NVIC_EnableIRQ (NVIC_UART_4_RX_IRQN) : NVIC_DisableIRQ (NVIC_UART_4_RX_IRQN);
+      break;
     }
 }
 
@@ -78,14 +89,19 @@ static void nvic_switch_uart_tx_int (uint32_t instance, uint32_t on)
     {
     case UART_0:
       (on == 1) ? NVIC_EnableIRQ (NVIC_UART_0_TX_IRQN) : NVIC_DisableIRQ (NVIC_UART_0_TX_IRQN);
+      break;
     case UART_1:
       (on == 1) ? NVIC_EnableIRQ (NVIC_UART_1_TX_IRQN) : NVIC_DisableIRQ (NVIC_UART_1_TX_IRQN);
+      break;
     case UART_2:
       (on == 1) ? NVIC_EnableIRQ (NVIC_UART_2_TX_IRQN) : NVIC_DisableIRQ (NVIC_UART_2_TX_IRQN);
+      break;
     case UART_3:
       (on == 1) ? NVIC_EnableIRQ (NVIC_UART_3_TX_IRQN) : NVIC_DisableIRQ (NVIC_UART_3_TX_IRQN);
+      break;
     case UART_4:
       (on == 1) ? NVIC_EnableIRQ (NVIC_UART_4_TX_IRQN) : NVIC_DisableIRQ (NVIC_UART_4_TX_IRQN);
+      break;
     }
 }
 
@@ -166,6 +182,9 @@ void board_uart_write_byte (uint32_t instance, uint8_t c)
   // Only need to disable tx interrupt, because tx and rx buffer are seperated.
   nvic_switch_uart_tx_int (instance, 0);
 
+  // Disable at the NVIC level. Not at the UART level. Just to avoid hardware quirks.
+  // uart_irq_tx_disable_cmsdk_apb_uart(regs);
+
   // DO NOT directly check hardware readiness here.
   // Instead check if hw is taking data from sw buffer.
   // And let the driver tell that via a shared variable.
@@ -184,6 +203,7 @@ void board_uart_write_byte (uint32_t instance, uint8_t c)
 
       // enable interrupt
       nvic_switch_uart_tx_int (instance, 1);
+      // uart_irq_tx_enable_cmsdk_apb_uart(regs);
       return;
     }
 
@@ -193,6 +213,7 @@ void board_uart_write_byte (uint32_t instance, uint8_t c)
 
   // enable interrupt;
   nvic_switch_uart_tx_int (instance, 1);
+  // uart_irq_tx_enable_cmsdk_apb_uart(regs);
 
   return;
 }
@@ -236,6 +257,7 @@ int32_t board_uart_read_byte (uint32_t instance, uint8_t* c)
   // This make it easier to think.
   // Only need to disable tx interrupt, because tx and rx buffer are seperated.
   nvic_switch_uart_rx_int (instance, 0);
+  // uart_irq_rx_disable_cmsdk_apb_uart(regs);
 
   // DO NOT directly read from hardware here.
   // Always read from sw buffer.
@@ -249,13 +271,15 @@ int32_t board_uart_read_byte (uint32_t instance, uint8_t* c)
 
       // enable interrupt
       nvic_switch_uart_rx_int (instance, 1);
+      // uart_irq_rx_enable_cmsdk_apb_uart(regs);
       // only one byte is read
       return 1;
     }
 
   // enable interrupt
   nvic_switch_uart_rx_int (instance, 1);
-  // uart_irq_tx_enable_cmsdk_apb_uart(regs);
+  // uart_irq_rx_enable_cmsdk_apb_uart(regs);
+
   return 0;
 }
 
@@ -377,7 +401,8 @@ void Uart_C_Handler (void)
 }
 
 /*
- Refer to drivers/uart/cmsdk_apb_uart/README for how cmsdk_apb_uart works.
+ The RX interrupt happens when data is ready to be consumed.
+ So we undoubtedly MUST read 1 byte.
 
 */
 static void Uart_C_Handler_Rx_Instance (uint32_t instance)
@@ -389,9 +414,27 @@ static void Uart_C_Handler_Rx_Instance (uint32_t instance)
   uart = uart_get_instance (instance);
   regs = (UART_REGS_CMSDK_APB*)uart->regs;
 
-  // Keep storing incoming data into sw buffer until no more data,
-  // the sw buffer CAN overrun!
-  while (uart_irq_rx_ready_cmsdk_apb_uart (regs))
+  /*
+  Step 1. The first thing is to clear the interrupt flag for this time.
+  */
+  // The Rx buffer must be not full now.
+  // Clear the RX interrupt status.
+  uart_irq_rx_clear_cmsdk_apb (regs);
+  // Clear the RX overrun interrupt if any.
+  // According to DDI0479D, this also clears the RX buffer overrun bit in STATE implicitly.
+  uart_irq_rx_overrun_clear_cmsdk_apb (regs);
+
+  /*
+  Step 2. Keep storing incoming data into sw buffer until no more data, the sw buffer CAN overrun!
+
+  In the case of cmsdk_apb_uart, the hw rx/tx buffer are both only 1-byte.
+  According to qemu/include/hw/char/cmsdk-apb-uart.h
+  "This UART has no FIFO, only a 1-character buffer for each of Tx and Rx."
+  So we simply read one char.
+
+  At first I did something like this:
+
+    while (uart_irq_rx_ready_cmsdk_apb_uart (regs))
     {
       uart_fifo_read_cmsdk_apb_uart (regs, &c, 1);
       uart->rx.buffer[uart->rx.n_head] = c;
@@ -401,23 +444,27 @@ static void Uart_C_Handler_Rx_Instance (uint32_t instance)
           RB_ADVANCE_POS (uart->rx.n_tail);
         }
       RB_ADVANCE_POS (uart->rx.n_head);
-      // just for echo back test
-      // board_uart_write (instance, &c, 1);
     }
-  // Since the Rx buffer is not full now, always write 1 to clear the RX buffer overrun state.
-  // Even there's no buffer overrun.
-  // Since no Zephyr RTOS UART API for this, so set the registers directly.
-  uart_rx_buffer_overrun_clear_cmsdk_apb (regs);
 
-  // Write 1 to clear the RX interrupt status.
-  uart_irq_rx_clear_cmsdk_apb (regs);
-  uart_irq_rx_overrun_clear_cmsdk_apb (regs);
-  return;
+  In the uart_irq_rx_ready_cmsdk_apb_uart(), I use the RX FULL flag to indicate there's data to read.
+  But as I experimented on QEMU, the RX FULL means two chars arriving at the UART to fast.
+  So I shound't use it that way. And the UART hw rx buffer is only 1-byte.
+  */
+  uart_fifo_read_cmsdk_apb_uart (regs, &c, 1);
+  uart->rx.buffer[uart->rx.n_head] = c;
+  if (rb_full (&uart->rx))
+    {
+      // overrun happens!
+      RB_ADVANCE_POS (uart->rx.n_tail);
+    }
+  RB_ADVANCE_POS (uart->rx.n_head);
 }
 
 
 /*
  TX interrupt only happens when UART is ready to transmit more data.
+ So we undoubtedly CAN transmit 1 byte if the sw buffer has something to tx.
+
 */
 static void Uart_C_Handler_Tx_Instance (uint32_t instance)
 {
@@ -428,24 +475,21 @@ static void Uart_C_Handler_Tx_Instance (uint32_t instance)
   uart = uart_get_instance (instance);
   regs = uart->regs;
 
-  // TX interrupt means UART is ready to transmit more data.
-  // So clear tx and tx overrun interrupts.
+  /*
+  Step 1. The first thing is to clear the interrupt flag of this time.s
+  */
+  // Clear the TX interrupt status.
   uart_irq_tx_clear_cmsdk_apb (regs);
+  // Clear the TX overrun interrupt status if any.
+  // According to DDI0479D, this also clears the TX buffer overrun bit in STATE implicitly.
   uart_irq_tx_overrun_clear_cmsdk_apb (regs);
 
   // This is the ISR code, no application code can interrupt it. So no need to disable UART interrupt.
 
-  if (uart_tx_buffer_overrun_cmsdk_apb (regs))
-    {
-      // if the tx buffer is overrun, do not take more data from the sw ring buffer.
-      // let the hw to continue tx.
-      uart->buffered_tx = 1;
-      return;
-    }
-
   /*
+  Step 2.
   TX handler only takes data from ring buffer.
-  Buffer empty, do nothing.
+  Buffer empty, no data to transmit.
   */
   if (rb_empty (&uart->tx))
     {
@@ -454,17 +498,22 @@ static void Uart_C_Handler_Tx_Instance (uint32_t instance)
     }
 
   /*
-  SW buffer not empty and hw tx buffer is not overrun. We got work to do.
+  Step 3.
+  SW buffer not empty. We got work to do.
+  And being here means we CAN send 1 byte.
   Fill the hardware tx buffer until it cannot accept more data or sw ring-buffer is drained.
   */
 
-  // indicating buffered tx is in progress
+  // HW has been kicked off to take data from the sw ring buffer.
+  // As long as buffered_tx is 1, sw should cotinue write to sw ring buffer and don't need to kick off the transmitting again.
   uart->buffered_tx = 1;
   while (uart_irq_tx_ready_cmsdk_apb_uart (regs))
     {
+      // If quit due to tx buffer full, the buffered_tx will remain set.
       c = uart->tx.buffer[uart->tx.n_tail];
 
       // send out the data
+      // this will ensure another TX interrupt to happen
       uart_fifo_fill_cmsdk_apb_uart (regs, &c, 1);
 
       // advance the tail position
