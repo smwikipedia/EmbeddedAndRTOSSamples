@@ -27,8 +27,7 @@ extern int32_t send_next (LIST_ENTRY* next);
 extern int32_t recv_prev (LIST_ENTRY* prev);
 
 typedef struct _RING_BUFFER RING_BUFFER;
-typedef struct _RING_BUFFER
-{
+typedef struct _RING_BUFFER {
   uint8_t buffer[RING_BUFFER_LENGTH];
 
   /*

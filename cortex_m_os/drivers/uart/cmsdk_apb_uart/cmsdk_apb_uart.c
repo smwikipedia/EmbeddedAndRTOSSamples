@@ -45,20 +45,18 @@ int32_t uart_init_cmsdk_apb (UART_REGS_CMSDK_APB* regs)
 
 int32_t uart_tx_buffer_overrun_cmsdk_apb (const UART_REGS_CMSDK_APB* regs)
 {
-  if (regs->STATE & BIT (TX_BUFFER_OVERRUN_BIT))
-    {
-      return 1;
-    }
+  if (regs->STATE & BIT (TX_BUFFER_OVERRUN_BIT)) {
+    return 1;
+  }
 
   return 0;
 }
 
 int32_t uart_rx_buffer_overrun_cmsdk_apb (const UART_REGS_CMSDK_APB* regs)
 {
-  if (regs->STATE & BIT (RX_BUFFER_OVERRUN_BIT))
-    {
-      return 1;
-    }
+  if (regs->STATE & BIT (RX_BUFFER_OVERRUN_BIT)) {
+    return 1;
+  }
 
   return 0;
 }
@@ -130,26 +128,20 @@ void uart_rx_disable_cmsdk_apb_uart (UART_REGS_CMSDK_APB* const regs)
 
 int32_t uart_rx_buffer_full_cmsdk_apb_uart (UART_REGS_CMSDK_APB* const regs)
 {
-  if (regs->STATE & BIT (RX_BUFFER_FULL_BIT))
-    {
-      return 1;
-    }
-  else
-    {
-      return 0;
-    }
+  if (regs->STATE & BIT (RX_BUFFER_FULL_BIT)) {
+    return 1;
+  } else {
+    return 0;
+  }
 }
 
 int32_t uart_tx_buffer_full_cmsdk_apb_uart (UART_REGS_CMSDK_APB* const regs)
 {
-  if (regs->STATE & BIT (TX_BUFFER_FULL_BIT))
-    {
-      return 1;
-    }
-  else
-    {
-      return 0;
-    }
+  if (regs->STATE & BIT (TX_BUFFER_FULL_BIT)) {
+    return 1;
+  } else {
+    return 0;
+  }
 }
 
 
@@ -162,12 +154,11 @@ int32_t uart_fifo_fill_cmsdk_apb_uart (UART_REGS_CMSDK_APB* const regs, const ui
   uint32_t sent_count;
 
   sent_count = 0;
-  while (uart_irq_tx_ready_cmsdk_apb_uart (regs) && size > 0)
-    {
-      regs->DATA = tx_data[sent_count];
-      size--;
-      sent_count++;
-    }
+  while (uart_irq_tx_ready_cmsdk_apb_uart (regs) && size > 0) {
+    regs->DATA = tx_data[sent_count];
+    size--;
+    sent_count++;
+  }
 
   return sent_count;
 }
@@ -178,10 +169,9 @@ int32_t uart_fifo_read_cmsdk_apb_uart (const UART_REGS_CMSDK_APB* regs, uint8_t*
   /*
   cmsdk_apb_uart only has 1-byte hw rx buffer.
   */
-  if (size < 1)
-    {
-      return 0;
-    }
+  if (size < 1) {
+    return 0;
+  }
   rx_data[0] = regs->DATA;
   return 1;
 }

@@ -8,8 +8,7 @@
 
 typedef int32_t (*process_t) (RING_BUFFER* buffer, uint8_t c);
 
-typedef struct _UART_CLASS
-{
+typedef struct _UART_CLASS {
   void* regs;
 
   // Indicating if hw is transmitting data from the buffer

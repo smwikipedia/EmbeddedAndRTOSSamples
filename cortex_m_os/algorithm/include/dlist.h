@@ -5,8 +5,7 @@
 
 typedef struct _LIST_ENTRY LIST_ENTRY;
 
-typedef struct _LIST_ENTRY
-{
+typedef struct _LIST_ENTRY {
   LIST_ENTRY* next;
   LIST_ENTRY* prev;
 } LIST_ENTRY;

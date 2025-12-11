@@ -3,33 +3,31 @@
 // follow the CMSIS/Utilities/ARM_Example.h
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
-  /* =========================================================================================================================== */
-  /* ================                                Interrupt Number Definition                                ================ */
-  /* =========================================================================================================================== */
+/* =========================================================================================================================== */
+/* ================                                Interrupt Number Definition                                ================ */
+/* =========================================================================================================================== */
 
-  typedef enum
-  {
-    /* =======================================  ARM Cortex-M3 Specific Interrupt Numbers  ======================================== */
-    Reset_IRQn            = -15, /*!< -15  Reset Vector, invoked on Power up and warm reset */
-    NonMaskableInt_IRQn   = -14, /*!< -14  Non maskable Interrupt, cannot be stopped or preempted */
-    HardFault_IRQn        = -13, /*!< -13  Hard Fault, all classes of Fault */
-    MemoryManagement_IRQn = -12, /*!< -12  Memory Management, MPU mismatch, including Access Violation and No Match */
-    BusFault_IRQn         = -11, /*!< -11  Bus Fault, Pre-Fetch-, Memory Access Fault, other address/memory   related Fault   */
-    UsageFault_IRQn       = -10, /*!< -10  Usage Fault, i.e. Undef Instruction, Illegal State Transition        */
-    SVCall_IRQn           = -5,  /*!< -5 System Service Call via SVC instruction */
-    DebugMonitor_IRQn     = -4,  /*!< -4 Debug Monitor */
-    PendSV_IRQn           = -2,  /*!< -2 Pendable request for system service */
-    SysTick_IRQn          = -1,  /*!< -1 System Tick Timer */
+typedef enum {
+  /* =======================================  ARM Cortex-M3 Specific Interrupt Numbers  ======================================== */
+  Reset_IRQn            = -15, /*!< -15  Reset Vector, invoked on Power up and warm reset */
+  NonMaskableInt_IRQn   = -14, /*!< -14  Non maskable Interrupt, cannot be stopped or preempted */
+  HardFault_IRQn        = -13, /*!< -13  Hard Fault, all classes of Fault */
+  MemoryManagement_IRQn = -12, /*!< -12  Memory Management, MPU mismatch, including Access Violation and No Match */
+  BusFault_IRQn         = -11, /*!< -11  Bus Fault, Pre-Fetch-, Memory Access Fault, other address/memory   related Fault   */
+  UsageFault_IRQn       = -10, /*!< -10  Usage Fault, i.e. Undef Instruction, Illegal State Transition        */
+  SVCall_IRQn           = -5,  /*!< -5 System Service Call via SVC instruction */
+  DebugMonitor_IRQn     = -4,  /*!< -4 Debug Monitor */
+  PendSV_IRQn           = -2,  /*!< -2 Pendable request for system service */
+  SysTick_IRQn          = -1,  /*!< -1 System Tick Timer */
 
-    /* ========================================  ARM_Example Specific Interrupt Numbers  ========================================= */
-    TIMER0_IRQn = 0, /*!< 0  Timer 0 interrupt */
-    TIMER1_IRQn = 4, /*!< 4  Timer 2 interrupt */
-    TIMER2_IRQn = 6  /*!< 6  Timer 2 interrupt  */
-  } IRQn_Type;
+  /* ========================================  ARM_Example Specific Interrupt Numbers  ========================================= */
+  TIMER0_IRQn = 0, /*!< 0  Timer 0 interrupt */
+  TIMER1_IRQn = 4, /*!< 4  Timer 2 interrupt */
+  TIMER2_IRQn = 6  /*!< 6  Timer 2 interrupt  */
+} IRQn_Type;
 
 
 /* =========================================================================================================================== */
