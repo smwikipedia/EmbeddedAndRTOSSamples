@@ -78,4 +78,36 @@ void SystemInit (void)
   Interrupts void __enable_irq(void) // Enable Interrupts
   */
   __enable_irq ();
+
+
+  /*
+  The CMSIS core_cm7.h defines only one API for SysTick: SysTick_Config().
+  It defaults to use the processor clock.
+
+  How to determine the processor clock?
+  A clock source goes through the PLL to get the SYSCLK.
+  And SYSCLK goes through pre-scalers to get HCLK, i.e. processor clock.
+  HCLK drives the Cortex-M processor core, the AHB bus, and usually high-speed peripherals.
+
+  On a complex commercial MCU (like an STM32), SYSCLK is often the output of the main PLL and is then
+  prescaled to derive HCLK (e.g., HCLK = SYSCLK / 1, HCLK = SYSCLK / 2, etc.).
+
+  On simpler systems, especially FPGA-based ones like the MPS2-AN500 where a single, dominant clock domain is used
+  for the entire system-on-chip (SoC) instantiated within the FPGA, SYSCLK often IS the HCLK (or they are the same frequency with a prescaler of 1).
+
+
+  From the DAI0500B_cortex_m7_on_v2m_mps2.pdf, $4 Clocks,
+  the SYSCLK is 25MHz. That is 25000000 Hz.
+
+  To generate SysTick interrupt every 10ms, the RELOAD value (ticks) should be:
+  10ms*25MHz = 10*10^(-3) * 25*10^6 = 25*10^4 = 250000
+
+  To generate SysTick interrupt every 1s, the value is: 25000000
+  But the SysTick reload value is greater than what the RELOAD register can hold: 0xFFFFFF = 16777215, that is 16777215/25000000=0.67s
+
+  As I tried, 10ms is better than 1ms compared to the wall clock.
+  So I set the SysTick interrupt interval to 10ms.
+
+  */
+  SysTick_Config (250000);
 }

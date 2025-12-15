@@ -173,6 +173,19 @@ Uart_Handler:
     .size  Uart_Handler, . - Uart_Handler
     .endfunc
 
+SysTick_Handler:
+    .func SysTick_Handler
+    .thumb_func
+    .type SysTick_Handler, %function
+    .globl SysTick_Handler
+    @ save the EXC_RETURN value which is automatically held in LR
+    push {lr}
+    bl  SysTick_C_Handler
+    @ restore the EXC_RETURN into PC, which triggers the exception return sequence
+    pop {pc}
+    .size  SysTick_Handler, . - SysTick_Handler
+    .endfunc
+
     /*
     These are the weak handlers that has only dummy logic
     */
@@ -207,8 +220,8 @@ Uart_Handler:
     .weak      PendSV_Handler
     .thumb_set PendSV_Handler, Default_Handler
 
-    .weak      SysTick_Handler
-    .thumb_set SysTick_Handler, Default_Handler
+    @ .weak      SysTick_Handler
+    @ .thumb_set SysTick_Handler, Default_Handler
 
 
 @ disable_interrupt:
