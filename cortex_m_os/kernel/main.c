@@ -4,7 +4,7 @@
 
 // This globl variable will cause linker warning.
 // warning: ./build/os.elf has a LOAD segment with RWX permissions
-static uint8_t msg[] = "hello, SysTick!\r\n";
+static uint8_t msg[] = "hello, SysTick!\n";
 
 extern volatile uint32_t elapsed_1s;
 extern uint32_t g_sys_uptime_ms;
