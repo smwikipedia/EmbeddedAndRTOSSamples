@@ -19,20 +19,15 @@
 
 #include <board_api.h>
 
-// This globl variable will cause linker warning.
-// warning: ./build/os.elf has a LOAD segment with RWX permissions
-static uint8_t msg[] = "hello, SysTick!\r\n";
-
-uint32_t g_sys_uptime_ms = 0;
+uint32_t g_sys_uptime_ms     = 0;
+volatile uint32_t elapsed_1s = 0;
 
 
 void SysTick_C_Handler (void)
 {
-  // uint8_t msg[] = "hello, SysTick!\n";
+  // Move the UART output work out of ISR into the main to reduce the ISR overhead.
   g_sys_uptime_ms += 10;
-
-  // write to uart 0 every 1s
   if (g_sys_uptime_ms % 1000 == 0) {
-    board_uart_write (0, msg, sizeof (msg));
+    elapsed_1s = 1;
   }
 }

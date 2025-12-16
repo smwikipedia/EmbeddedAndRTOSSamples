@@ -105,9 +105,13 @@ void SystemInit (void)
   To generate SysTick interrupt every 1s, the value is: 25000000
   But the SysTick reload value is greater than what the RELOAD register can hold: 0xFFFFFF = 16777215, that is 16777215/25000000=0.67s
 
-  As I tried, 10ms is better than 1ms compared to the wall clock.
-  So I set the SysTick interrupt interval to 10ms.
+  If the SysTick is not frequent enough, task switch may be not in time. System may be less responsive.
+  If the SysTick is too frequent, the system will also be less responsive due to interrupt overhead.
+  To solve this dilemma, we have to find the sweet spot by experiment and measeuring.
 
+  As I tried on QEMU mps2-an500 board, 10ms is better than 1ms when compared to the wall clock.
+  So I set the SysTick interrupt interval to 10ms/250000 ticks.
+  And I move the UART output work out of ISR into the main.
   */
   SysTick_Config (250000);
 }
