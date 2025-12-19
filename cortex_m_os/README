@@ -9,7 +9,11 @@ Preparation Steps:
 0. Install toolchain
    sudo apt install ninja-build libglib2.0-dev flex bison
 
-1. Build latest QEMU from source (ref: https://github.com/qemu/qemu)
+1. Build latest QEMU from source (ref: https://github.com/qemu/qemu).
+   The commit I am using is bb7fc1543f.
+   You may need to install below dependencies.
+   sudo apt install flex bison libglib2.0-dev libfdt-dev libpmem-dev libdaxctl-dev libcbor-dev libudev-dev libdw-dev libusb-dev librdmacm-dev libiscsi-dev libnfs-dev libssh-dev
+
    git clone git@github.com:qemu/qemu.git
    cd qemu
    mkdir build
