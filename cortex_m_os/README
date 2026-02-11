@@ -22,6 +22,8 @@ Preparation Steps:
    make
    sudo make install
 
+   Then you should see qemu binaries installed as /usr/local/bin/qemu-*.
+
 2. Download ARM toolchain
    Goto: https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads
    wget https://developer.arm.com/-/media/Files/downloads/gnu/14.3.rel1/binrel/arm-gnu-toolchain-14.3.rel1-x86_64-arm-none-eabi.tar.xz
